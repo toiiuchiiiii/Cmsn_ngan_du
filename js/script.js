@@ -608,8 +608,9 @@
   var convsCache = [];
 
   function loadContacts() {
+    if (!state.token) { contactsCache = []; return; }
     api('/chat/contacts').then(function (data) {
-      contactsCache = data.contacts;
+      contactsCache = data.contacts || [];
     }).catch(function () {});
   }
 
@@ -625,7 +626,18 @@
       convsCache = data.conversations || [];
 
       if (convsCache.length === 0) {
-        contactsList.innerHTML = '<div class="posts-empty" style="padding:20px;text-align:center;font-size:0.85rem">Chưa có hội thoại nào</div>';
+        if (contactsCache.length === 0) {
+          contactsList.innerHTML = '<div class="posts-loading">Đang tải...</div>';
+          loadContacts();
+          var retries = 0;
+          var retry = setInterval(function () {
+            retries++;
+            if (contactsCache.length > 0) { clearInterval(retry); renderSuggestedContacts(); }
+            else if (retries >= 10) { clearInterval(retry); contactsList.innerHTML = '<div class="posts-empty" style="padding:20px;text-align:center;font-size:0.85rem">Không tải được danh sách</div>'; }
+          }, 300);
+        } else {
+          renderSuggestedContacts();
+        }
         updateOnlineCount();
         return;
       }
@@ -665,6 +677,68 @@
       updateOnlineCount();
     }).catch(function () {
       contactsList.innerHTML = '<div class="posts-empty" style="padding:20px;text-align:center;font-size:0.85rem">Không thể tải</div>';
+    });
+  }
+
+  function renderSuggestedContacts() {
+    if (contactsCache.length === 0) {
+      contactsList.innerHTML = '<div class="posts-empty" style="padding:20px;text-align:center;font-size:0.85rem">Không có người dùng nào</div>';
+      return;
+    }
+    var agents = contactsCache.filter(function (c) { return c.is_agent; });
+    var users = contactsCache.filter(function (c) { return !c.is_agent; });
+    var avatarColors = ['#4A6FA5', '#6B9C7B', '#E8A87C', '#E57373', '#9575CD'];
+    var html = '';
+
+    var renderList = function (list, label, icon) {
+      if (list.length === 0) return;
+      html += '<div style="padding:12px 12px 4px;font-size:0.78rem;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px">' + label + '</div>';
+      list.forEach(function (c, idx) {
+        var color = avatarColors[(c.id || idx) % avatarColors.length];
+        html +=
+          '<div class="contact-item" data-agent-id="' + c.id + '" data-agent-name="' + escapeHtml(c.name) + '" data-agent-color="' + color + '">' +
+            '<div class="contact-avatar" style="background:' + color + ';">' +
+              '<i class="fas ' + icon + '"></i>' +
+            '</div>' +
+            '<div class="contact-info">' +
+              '<div class="contact-name-row">' +
+                '<span class="contact-name">' + escapeHtml(c.name) + '</span>' +
+              '</div>' +
+              '<div class="contact-preview">' +
+                '<span class="contact-status online"></span>' +
+                '<span class="contact-msg" style="color:var(--primary);font-weight:500">Nhấn để trò chuyện</span>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+      });
+    };
+
+    renderList(agents, 'Hỗ trợ viên', 'fa-user-shield');
+    renderList(users, 'Người dùng', 'fa-user');
+
+    contactsList.innerHTML = html || '<div class="posts-empty" style="padding:20px;text-align:center;font-size:0.85rem">Không có ai để trò chuyện</div>';
+
+    document.querySelectorAll('.contact-item[data-agent-id]').forEach(function (item) {
+      item.addEventListener('click', function () {
+        var agentId = parseInt(item.getAttribute('data-agent-id'));
+        var agentName = item.getAttribute('data-agent-name');
+        var agentColor = item.getAttribute('data-agent-color');
+        startConversationWith(agentId, agentName, agentColor);
+      });
+    });
+  }
+
+  function startConversationWith(agentId, agentName, agentColor) {
+    if (!state.token) { openModal('login'); return; }
+    api('/chat/conversations', {
+      method: 'POST',
+      body: { contact_id: agentId }
+    }).then(function (data) {
+      currentConvId = data.conversation.id;
+      loadConversations();
+      switchConversation(currentConvId, agentId, agentName, agentColor || '#4A6FA5');
+    }).catch(function (err) {
+      alert('Lỗi: ' + err.message);
     });
   }
 
@@ -757,7 +831,9 @@
   function sendMessage() {
     if (!currentConvId) {
       if (!state.token) { openModal('login'); return; }
+      var msg = chatInput.value.trim();
       startNewConversation();
+      if (msg) chatInput.value = msg;
       return;
     }
     var text = chatInput.value.trim();
@@ -784,27 +860,12 @@
   }
 
   function startNewConversation() {
-    var doCreate = function (contacts) {
-      if (contacts.length === 0) { alert('Hiện không có hỗ trợ viên nào.'); return; }
-      var chosen = contacts[0];
-      api('/chat/conversations', {
-        method: 'POST',
-        body: { contact_id: chosen.id }
-      }).then(function (data) {
-        currentConvId = data.conversation.id;
-        loadConversations();
-        switchConversation(currentConvId, chosen.id, chosen.name, '#4A6FA5');
-      }).catch(function (err) {
-        alert('Lỗi: ' + err.message);
-      });
-    };
-    if (contactsCache.length > 0) { doCreate(contactsCache); return; }
-    api('/chat/contacts').then(function (data) {
-      contactsCache = data.contacts || [];
-      doCreate(contactsCache);
-    }).catch(function () {
-      alert('Không thể lấy danh sách hỗ trợ viên.');
-    });
+    loadContacts();
+    loadConversations();
+    if (window.innerWidth <= 768) {
+      chatContacts.classList.remove('hidden');
+      chatConversation.classList.add('hidden');
+    }
   }
 
   sendBtn.addEventListener('click', sendMessage);

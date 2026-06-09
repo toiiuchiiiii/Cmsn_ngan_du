@@ -4,11 +4,12 @@ const { authMiddleware } = require('../middleware/auth');
 
 const router = express.Router();
 
-router.get('/contacts', async function (req, res) {
-  var agents = await db.all(
-    "SELECT id, name, email FROM users WHERE email LIKE 'agent.%' ORDER BY name ASC"
+router.get('/contacts', authMiddleware, async function (req, res) {
+  var users = await db.all(
+    "SELECT id, name, email, CASE WHEN email LIKE 'agent.%' THEN 1 ELSE 0 END AS is_agent FROM users WHERE id != $1 ORDER BY is_agent DESC, name ASC",
+    [req.userId]
   );
-  res.json({ contacts: agents });
+  res.json({ contacts: users });
 });
 
 router.get('/conversations', authMiddleware, async function (req, res) {
