@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: cmsn-ngan-du
+    name: mindwell
     env: node
     rootDir: backend
     buildCommand: npm install
