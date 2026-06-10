@@ -33,6 +33,10 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
+});
+
 app.use(function (err, req, res, next) {
   console.error(err);
   res.status(500).json({ error: 'Lỗi máy chủ nội bộ' });
