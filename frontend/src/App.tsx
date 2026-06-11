@@ -10,6 +10,7 @@ import { PostDetail } from '@/components/features/community/post-detail'
 import { ChatPage } from '@/components/features/chat/chat-page'
 import { PageAgent } from '@/components/features/agent/page-agent'
 import { ExpandableTabs } from '@/components/ui/expandable-tabs'
+import { SVGFollower } from '@/components/ui/svg-follower'
 import { BookOpen, ClipboardCheck, Users, Calendar, MessageCircle, Home } from 'lucide-react'
 
 const navTabs = [
@@ -124,18 +125,27 @@ function AppLayout() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-canvas">
-      <NavBar />
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/diary" element={<DiaryPage />} />
-        <Route path="/test" element={<TestPage />} />
-        <Route path="/community" element={<CommunityPage />} />
-        <Route path="/community/:id" element={<PostDetail />} />
-        <Route path="/appointments" element={<AppointmentsPage />} />
-        <Route path="/chat" element={<ChatPage />} />
-      </Routes>
-      <PageAgent />
+    <div className="min-h-screen bg-canvas relative">
+      <SVGFollower
+        className="fixed inset-0 z-0 pointer-events-none"
+        colors={["#a7c957", "#6a9c89", "#45b7d1", "#c9a7eb", "#f4a261"]}
+        autoPlay
+        width="100%"
+        height="100%"
+      />
+      <div className="relative z-10">
+        <NavBar />
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/diary" element={<DiaryPage />} />
+          <Route path="/test" element={<TestPage />} />
+          <Route path="/community" element={<CommunityPage />} />
+          <Route path="/community/:id" element={<PostDetail />} />
+          <Route path="/appointments" element={<AppointmentsPage />} />
+          <Route path="/chat" element={<ChatPage />} />
+        </Routes>
+        <PageAgent />
+      </div>
     </div>
   )
 }
