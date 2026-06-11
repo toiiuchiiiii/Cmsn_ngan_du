@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-dom'
 import { AuthModal } from '@/components/features/auth/auth-modal'
 import { useAuthStore } from '@/stores/auth-store'
 import { DiaryPage } from '@/components/features/diary/diary-page'
@@ -9,13 +9,28 @@ import { CommunityPage } from '@/components/features/community/community-page'
 import { PostDetail } from '@/components/features/community/post-detail'
 import { ChatPage } from '@/components/features/chat/chat-page'
 import { PageAgent } from '@/components/features/agent/page-agent'
+import { ExpandableTabs } from '@/components/ui/expandable-tabs'
+import { BookOpen, ClipboardCheck, Users, Calendar, MessageCircle, Home } from 'lucide-react'
+
+const navTabs = [
+  { title: 'Trang chủ', icon: Home },
+  { type: 'separator' as const },
+  { title: 'Nhật ký', icon: BookOpen },
+  { title: 'Kiểm tra', icon: ClipboardCheck },
+  { title: 'Cộng đồng', icon: Users },
+  { title: 'Lịch hẹn', icon: Calendar },
+  { title: 'Tin nhắn', icon: MessageCircle },
+]
+
+const tabRoutes = ['/', '/diary', '/test', '/community', '/appointments', '/chat']
+const tabIndexByPath: Record<string, number> = {}
+tabRoutes.forEach((path, i) => { tabIndexByPath[path] = i })
 
 function NavBar() {
   const [authOpen, setAuthOpen] = useState(false)
   const [authTab, setAuthTab] = useState<'login' | 'register'>('login')
   const { isAuthenticated, user, logout } = useAuthStore()
-  const location = useLocation()
-
+  const navigate = useNavigate()
   return (
     <>
       <header className="border-b border-border">
@@ -23,60 +38,17 @@ function NavBar() {
           <Link to="/" className="text-lg font-semibold text-fg-primary no-underline hover:text-accent-sage transition-colors">
             MindWell
           </Link>
-          <nav className="flex items-center gap-4">
-            <Link
-              to="/diary"
-              className={`text-sm transition-colors ${
-                location.pathname === '/diary'
-                  ? 'text-accent-sage font-medium'
-                  : 'text-fg-secondary hover:text-fg-primary'
-              }`}
-            >
-              Nhật ký
-            </Link>
-            <Link
-              to="/test"
-              className={`text-sm transition-colors ${
-                location.pathname === '/test'
-                  ? 'text-accent-sage font-medium'
-                  : 'text-fg-secondary hover:text-fg-primary'
-              }`}
-            >
-              Kiểm tra
-            </Link>
-            <Link
-              to="/community"
-              className={`text-sm transition-colors ${
-                location.pathname === '/community' || location.pathname.startsWith('/community/')
-                  ? 'text-accent-sage font-medium'
-                  : 'text-fg-secondary hover:text-fg-primary'
-              }`}
-            >
-              Cộng đồng
-            </Link>
-            <Link
-              to="/appointments"
-              className={`text-sm transition-colors ${
-                location.pathname === '/appointments'
-                  ? 'text-accent-sage font-medium'
-                  : 'text-fg-secondary hover:text-fg-primary'
-              }`}
-            >
-              Lịch hẹn
-            </Link>
-            <Link
-              to="/chat"
-              className={`text-sm transition-colors ${
-                location.pathname === '/chat'
-                  ? 'text-accent-sage font-medium'
-                  : 'text-fg-secondary hover:text-fg-primary'
-              }`}
-            >
-              Tin nhắn
-            </Link>
+          <ExpandableTabs
+            tabs={navTabs}
+            activeColor="text-accent-sage"
+            onChange={(index) => {
+              if (index !== null) navigate(tabRoutes[index])
+            }}
+          />
+          <div className="flex items-center gap-2">
             {isAuthenticated && user ? (
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-fg-secondary">{user.name}</span>
+              <>
+                <span className="text-sm text-fg-secondary mr-2">{user.name}</span>
                 <button
                   type="button"
                   onClick={logout}
@@ -84,9 +56,9 @@ function NavBar() {
                 >
                   Thoát
                 </button>
-              </div>
+              </>
             ) : (
-              <div className="flex items-center gap-2">
+              <>
                 <button
                   type="button"
                   onClick={() => { setAuthTab('login'); setAuthOpen(true) }}
@@ -101,9 +73,9 @@ function NavBar() {
                 >
                   Đăng ký
                 </button>
-              </div>
+              </>
             )}
-          </nav>
+          </div>
         </div>
       </header>
 
