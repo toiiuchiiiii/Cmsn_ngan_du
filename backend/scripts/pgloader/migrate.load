@@ -1,0 +1,17 @@
+LOAD DATABASE
+     FROM sqlite:///path/to/mindwell.db
+     INTO postgresql://localhost:5432/mindwell
+
+WITH include drop, create tables, create indexes, reset sequences,
+     batch rows = 1000, batch concurrency = 1
+
+SET PostgreSQL PARAMETERS
+     maintenance_work_mem = '128MB',
+     work_mem = '64MB'
+
+CAST column datetime to timestamp drop not null using zero-dates-to-null,
+     column created_at to timestamp drop not null using zero-dates-to-null,
+     column updated_at to timestamp drop not null using zero-dates-to-null;
+
+BEFORE LOAD DO
+     $$ create extension if not exists pgcrypto; $$;

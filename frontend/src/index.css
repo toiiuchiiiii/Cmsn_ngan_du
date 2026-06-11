@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+@theme {
+  --color-canvas: #FFFFFF;
+  --color-surface: #F7F6F3;
+  --color-surface-hover: #EDECE8;
+  --color-border: #EAEAEA;
+  --color-border-hover: #D4D2CC;
+
+  --color-fg-primary: #2D3748;
+  --color-fg-secondary: #4A5568;
+  --color-fg-tertiary: #9CA3AF;
+  --color-fg-disabled: #C0BDB8;
+
+  --color-accent-sage: #8FA88D;
+  --color-accent-sage-surface: #F0F5EE;
+  --color-accent-rose: #D4A5A5;
+  --color-accent-rose-surface: #FBF4F4;
+  --color-accent-lavender: #9B9EBF;
+  --color-accent-lavender-surface: #F2F2F8;
+
+  --color-crisis: #C97C7C;
+  --color-crisis-surface: #FDF2F2;
+  --color-success: #7BA38B;
+  --color-warning: #C9A97C;
+
+  --font-sans: 'Geist', 'Inter', system-ui, sans-serif;
+  --font-serif: 'Newsreader', 'Georgia', serif;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
+  --text-6xl: 3.75rem;
+  --text-7xl: 4.5rem;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.75rem;
+  --radius-full: 9999px;
+
+  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-slide-up: slide-up 0.3s ease-out;
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--color-canvas);
+  color: var(--color-fg-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
