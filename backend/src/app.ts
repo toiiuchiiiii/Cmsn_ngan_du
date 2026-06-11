@@ -33,7 +33,8 @@ app.use((req, _res, next) => {
 app.use(routes);
 
 app.use(express.static(frontendDist));
-app.get('*', (_req, res) => {
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/')) return next();
   res.sendFile(path.join(frontendDist, 'index.html'));
 });
 
