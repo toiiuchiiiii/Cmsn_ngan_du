@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, varchar, text, timestamp, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, serial, integer, varchar, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 import { users } from './users.js';
 
 export const posts = pgTable('posts', {
@@ -30,8 +30,6 @@ export const comments = pgTable('comments', {
   createdAt: timestamp('created_at').notNull().$default(() => new Date()),
   updatedAt: timestamp('updated_at').notNull().$default(() => new Date()),
 });
-
-export const commentsPostIdIndex = index('comments_post_id_idx').on(comments.postId);
 
 export type Post = typeof posts.$inferSelect;
 export type NewPost = typeof posts.$inferInsert;
