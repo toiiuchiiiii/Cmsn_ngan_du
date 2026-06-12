@@ -2,6 +2,7 @@ import { ConversationRepository } from '../repositories/conversation.repository.
 import { MessageRepository } from '../repositories/message.repository.js';
 import { NotFoundError, ForbiddenError } from '../utils/errors.js';
 import { logger } from '../utils/logger.js';
+import { getRoomManager } from '../websocket/registry.js';
 
 export class ChatService {
   constructor(
@@ -62,6 +63,13 @@ export class ChatService {
     });
 
     await this.conversationRepo.updateTimestamp(conversationId);
+
+    try {
+      const channel = `conversation:${conversationId}`;
+      getRoomManager().broadcast(channel, 'message.new', message);
+    } catch {
+      // RoomManager not initialized yet (WS not ready)
+    }
 
     logger.info({ messageId: message.id, conversationId, senderId }, 'Message sent');
     return message;

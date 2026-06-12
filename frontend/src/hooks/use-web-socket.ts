@@ -10,6 +10,7 @@ export function useWebSocket() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const addMessage = useChatStore((s) => s.addMessage)
   const updateContactStatus = useChatStore((s) => s.updateContactStatus)
+  const activeConversationId = useChatStore((s) => s.activeConversationId)
   const typingTimers = useRef<Map<number, ReturnType<typeof setTimeout>>>(
     new Map(),
   )
@@ -32,6 +33,20 @@ export function useWebSocket() {
 
     socketManager.connect()
 
+    const joinConversationRoom = (convId: number) => {
+      socketManager.send('room.join', { channel: `conversation:${convId}` })
+    }
+
+    const unsubConnected = socketManager.subscribe(
+      'connected',
+      () => {
+        socketManager.send('room.join', { channel: 'presence:global' })
+        if (activeConversationId) {
+          joinConversationRoom(activeConversationId)
+        }
+      },
+    )
+
     const unsubMessage = socketManager.subscribe(
       'message.new',
       (payload) => {
@@ -41,12 +56,13 @@ export function useWebSocket() {
     )
 
     const unsubTyping = socketManager.subscribe(
-      'typing',
+      'typing.start',
       (payload) => {
-        const { conversation_id, user_id } = payload as {
-          conversation_id: number
-          user_id: number
+        const data = payload as {
+          conversationId: number
+          userId: number
         }
+        const { conversationId: conversation_id, userId: user_id } = data
         const existing = typingTimers.current.get(conversation_id)
         if (existing) clearTimeout(existing)
         typingTimers.current.set(
@@ -62,17 +78,24 @@ export function useWebSocket() {
     )
 
     const unsubPresence = socketManager.subscribe(
-      'presence',
+      'presence.update',
       (payload) => {
-        const { user_id, online } = payload as {
-          user_id: number
-          online: boolean
+        const data = payload as {
+          userId: number
+          status: string
         }
-        updateContactStatus(user_id, online)
+        const { userId: user_id, status } = data
+        updateContactStatus(user_id, status === 'online')
       },
     )
 
+    // Join conversation room when active conversation changes
+    if (activeConversationId) {
+      joinConversationRoom(activeConversationId)
+    }
+
     return () => {
+      unsubConnected()
       unsubMessage()
       unsubTyping()
       unsubPresence()
@@ -80,7 +103,7 @@ export function useWebSocket() {
       typingTimers.current.clear()
       socketManager.disconnect()
     }
-  }, [isAuthenticated, addMessage, updateContactStatus])
+  }, [isAuthenticated, addMessage, updateContactStatus, activeConversationId])
 
   return { onTyping }
 }

@@ -2,7 +2,7 @@ type MessageHandler = (data: unknown) => void
 
 const RECONNECT_BASE = 1000
 const RECONNECT_MAX = 30_000
-const HEARTBEAT_INTERVAL = 30_000
+// const HEARTBEAT_INTERVAL = 30_000
 
 class SocketManager {
   private ws: WebSocket | null = null
@@ -33,7 +33,7 @@ class SocketManager {
     ws.onmessage = (event) => {
       try {
         const parsed = JSON.parse(event.data)
-        const { type, payload } = parsed
+        const { event: type, payload } = parsed
         const typeHandlers = this.handlers.get(type)
         if (typeHandlers) {
           typeHandlers.forEach((handler) => handler(payload))
@@ -72,12 +72,8 @@ class SocketManager {
   }
 
   private startHeartbeat() {
+    // Backend handles WS-level ping/pong; no app-level heartbeat needed
     this.stopHeartbeat()
-    this.heartbeatTimer = setInterval(() => {
-      if (this.ws?.readyState === WebSocket.OPEN) {
-        this.ws.send(JSON.stringify({ type: 'ping' }))
-      }
-    }, HEARTBEAT_INTERVAL)
   }
 
   private stopHeartbeat() {

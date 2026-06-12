@@ -4,6 +4,7 @@ import { useChatStore } from '@/stores/chat-store'
 import { useSendMessage } from '@/hooks/use-chat'
 
 const TYPING_THROTTLE = 2000
+const TYPING_STOP_DELAY = 3000
 
 interface ChatInputProps {
   conversationId: number
@@ -13,6 +14,7 @@ export function ChatInput({ conversationId }: ChatInputProps) {
   const [text, setText] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const lastTypingSent = useRef(0)
+  const typingStopTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const sendMutation = useSendMessage()
   const activeConversationId = useChatStore((s) => s.activeConversationId)
 
@@ -60,8 +62,12 @@ export function ChatInput({ conversationId }: ChatInputProps) {
       const now = Date.now()
       if (now - lastTypingSent.current > TYPING_THROTTLE) {
         lastTypingSent.current = now
-        socketManager.send('typing', { conversation_id: conversationId })
+        socketManager.send('typing.start', { conversationId })
       }
+      if (typingStopTimer.current) clearTimeout(typingStopTimer.current)
+      typingStopTimer.current = setTimeout(() => {
+        socketManager.send('typing.stop', { conversationId })
+      }, TYPING_STOP_DELAY)
     },
     [conversationId],
   )

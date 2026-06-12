@@ -9,6 +9,7 @@ import { presenceHandler } from './handlers/presence.handler.js';
 import { MessageRepository } from '../repositories/message.repository.js';
 import { ConversationRepository } from '../repositories/conversation.repository.js';
 import { logger } from '../utils/logger.js';
+import { setRoomManager } from './registry.js';
 
 const HEARTBEAT_INTERVAL = 30000;
 const HEARTBEAT_TIMEOUT = 60000;
@@ -113,6 +114,13 @@ export function initWebSocketServer(httpServer: HttpServer): RoomManager {
           presenceHandler(socket, userId, payload as any, roomManager);
           break;
 
+        case 'ping':
+          break;
+
+        case 'typing':
+          typingHandler(socket, userId, 'typing.start', payload as any, roomManager);
+          break;
+
         default:
           socket.send(JSON.stringify({ event: 'error', payload: { message: `Loại tin nhắn không hỗ trợ: ${type}` } }));
       }
@@ -139,6 +147,7 @@ export function initWebSocketServer(httpServer: HttpServer): RoomManager {
     socket.send(JSON.stringify({ event: 'connected', payload: { userId } }));
   });
 
+  setRoomManager(roomManager);
   logger.info('WebSocket server initialized');
   return roomManager;
 }
