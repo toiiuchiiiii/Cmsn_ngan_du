@@ -1,4 +1,7 @@
 import type { Response } from 'express';
+import { eq } from 'drizzle-orm';
+import { db } from '../config/database.js';
+import { users } from '../db/schema/users.js';
 import { ChatService } from '../services/chat.service.js';
 import { asyncHandler } from '../middleware/async-handler.js';
 import { success } from '../utils/response.js';
@@ -35,6 +38,16 @@ export function chatController(chatService: ChatService) {
       const { text } = req.body;
       const message = await chatService.sendMessage(conversationId, req.userId!, text);
       res.status(201).json(success(message));
+    }),
+
+    listTherapists: asyncHandler(async (_req: AuthRequest, res: Response) => {
+      const therapists = await db.select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        role: users.role,
+      }).from(users).where(eq(users.role, 'therapist'));
+      res.json(success(therapists));
     }),
 
     markRead: asyncHandler(async (req: AuthRequest, res: Response) => {

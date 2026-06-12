@@ -1,6 +1,7 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { useAuthStore } from '@/stores/auth-store'
 import { useChatStore } from '@/stores/chat-store'
-import { useConversations, useContacts } from '@/hooks/use-chat'
+import { useConversations, useTherapists, useCreateConversation } from '@/hooks/use-chat'
 import { ContactItem } from './contact-item'
 
 interface ContactListProps {
@@ -28,12 +29,18 @@ export function ContactList({ onSelectConversation }: ContactListProps) {
   const activeConversationId = useChatStore((s) => s.activeConversationId)
   const setActiveConversation = useChatStore((s) => s.setActiveConversation)
   const setConversations = useChatStore((s) => s.setConversations)
-  const setContacts = useChatStore((s) => s.setContacts)
+  const currentUser = useAuthStore((s) => s.user)
+  const [startedIds, setStartedIds] = useState<Set<number>>(new Set())
 
   const { data, isLoading, isError, error, refetch } = useConversations()
-  const contactsQuery = useContacts()
+  const therapistsQuery = useTherapists()
+  const createConv = useCreateConversation()
 
   const convs = data?.conversations ?? []
+  const therapists = therapistsQuery.data?.data ?? []
+  const existingContactIds = new Set(convs.map(c => c.participants?.find(p => p.id !== currentUser?.id)?.id).filter(Boolean))
+
+  const availableTherapists = therapists.filter(t => !existingContactIds.has(t.id) && !startedIds.has(t.id))
 
   useEffect(() => {
     if (data?.conversations) {
@@ -41,11 +48,14 @@ export function ContactList({ onSelectConversation }: ContactListProps) {
     }
   }, [data, setConversations])
 
-  useEffect(() => {
-    if (contactsQuery.data?.contacts) {
-      setContacts(contactsQuery.data.contacts)
-    }
-  }, [contactsQuery.data, setContacts])
+  const handleStartChat = async (therapistId: number) => {
+    try {
+      const conv = await createConv.mutateAsync({ contact_id: therapistId })
+      setActiveConversation(conv.id)
+      onSelectConversation(conv.id)
+      setStartedIds(prev => new Set([...prev, therapistId]))
+    } catch { /* ignore */ }
+  }
 
   if (isLoading) return <ContactListSkeleton />
 
@@ -68,36 +78,66 @@ export function ContactList({ onSelectConversation }: ContactListProps) {
     )
   }
 
-  if (convs.length === 0) {
-    return (
-      <div className="flex flex-col items-center py-16 px-4 text-center">
-        <div className="mb-4 text-fg-tertiary">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-          </svg>
-        </div>
-        <p className="text-fg-secondary text-sm mb-1">Chưa có cuộc trò chuyện nào</p>
-        <p className="text-fg-tertiary text-xs">Hãy bắt đầu một cuộc trò chuyện mới</p>
-      </div>
-    )
-  }
-
-  const handleSelect = (id: number) => {
-    setActiveConversation(id)
-    onSelectConversation(id)
-  }
-
   return (
-    <div className="divide-y divide-border" role="list" aria-label="Danh sách hội thoại">
-      {convs.map((conv) => (
-        <div key={conv.id} role="listitem">
-          <ContactItem
-            conversation={conv}
-            isActive={conv.id === activeConversationId}
-            onClick={() => handleSelect(conv.id)}
-          />
+    <div>
+      {convs.length > 0 && (
+        <div className="divide-y divide-border" role="list" aria-label="Danh sách hội thoại">
+          {convs.map((conv) => (
+            <div key={conv.id} role="listitem">
+              <ContactItem
+                conversation={conv}
+                isActive={conv.id === activeConversationId}
+                onClick={() => {
+                  setActiveConversation(conv.id)
+                  onSelectConversation(conv.id)
+                }}
+              />
+            </div>
+          ))}
         </div>
-      ))}
+      )}
+
+      {availableTherapists.length > 0 && (
+        <div className="px-4 pt-4 pb-2">
+          <p className="text-xs font-medium text-fg-tertiary uppercase tracking-wider mb-2">
+            Tư vấn viên
+          </p>
+          <div className="space-y-1">
+            {availableTherapists.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => handleStartChat(t.id)}
+                disabled={createConv.isPending}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-surface-hover transition-colors text-left disabled:opacity-50"
+              >
+                <div className="w-9 h-9 rounded-full bg-accent-lavender flex items-center justify-center text-sm font-medium text-white flex-shrink-0">
+                  {t.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) ?? 'TV'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-fg-primary truncate">{t.name}</p>
+                  <p className="text-xs text-accent-lavender">Tư vấn viên</p>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-fg-tertiary flex-shrink-0">
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                </svg>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {convs.length === 0 && availableTherapists.length === 0 && (
+        <div className="flex flex-col items-center py-16 px-4 text-center">
+          <div className="mb-4 text-fg-tertiary">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+            </svg>
+          </div>
+          <p className="text-fg-secondary text-sm mb-1">Chưa có cuộc trò chuyện nào</p>
+          <p className="text-fg-tertiary text-xs">Hãy bắt đầu một cuộc trò chuyện mới</p>
+        </div>
+      )}
     </div>
   )
 }

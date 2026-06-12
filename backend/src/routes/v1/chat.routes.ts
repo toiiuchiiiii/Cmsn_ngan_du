@@ -18,6 +18,7 @@ const messageRepo = new MessageRepository();
 const service = new ChatService(conversationRepo, messageRepo);
 const controller = chatController(service);
 
+router.get('/therapists', authenticate, controller.listTherapists);
 router.get('/conversations', authenticate, controller.convList);
 router.post('/conversations', authenticate, validate(createConversationSchema), controller.createConv);
 router.get('/conversations/:id', authenticate, controller.convDetail);

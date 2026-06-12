@@ -2,7 +2,7 @@ import { useRef, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { useChatStore } from '@/stores/chat-store'
-import type { Conversation, Message, Contact } from '@/types'
+import type { Conversation, Message, Contact, User } from '@/types'
 import type { SendMessageFormData } from '@/lib/chat-schemas'
 
 export function useConversations() {
@@ -71,6 +71,14 @@ export function useCreateConversation() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['chat', 'conversations'] })
     },
+  })
+}
+
+export function useTherapists() {
+  return useQuery({
+    queryKey: ['chat', 'therapists'],
+    queryFn: () => api.get('chat/therapists').json<{ data: User[] }>(),
+    staleTime: 30_000,
   })
 }
 
