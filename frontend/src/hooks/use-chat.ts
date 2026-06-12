@@ -1,30 +1,69 @@
-import { useRef, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { useChatStore } from '@/stores/chat-store'
-import type { Conversation, Message, Contact, User } from '@/types'
+import type { Conversation, Message, User } from '@/types'
 import type { SendMessageFormData } from '@/lib/chat-schemas'
 
+interface BackendConversation {
+  conversation: {
+    id: number
+    created_at: string
+    updated_at: string
+  }
+  lastMessage: {
+    id: number
+    conversation_id: number
+    sender_id: number
+    text: string
+    is_read: number
+    created_at: string
+  } | null
+  participantIds: number[]
+}
+
+function toConversation(raw: BackendConversation): Conversation {
+  return {
+    id: raw.conversation.id,
+    created_at: raw.conversation.created_at,
+    updated_at: raw.conversation.updated_at,
+    participants: [],
+    last_message: raw.lastMessage
+      ? { ...raw.lastMessage, is_read: !!raw.lastMessage.is_read }
+      : undefined,
+  }
+}
+
 export function useConversations() {
-  return useQuery({
+  const setConversations = useChatStore((s) => s.setConversations)
+
+  const query = useQuery({
     queryKey: ['chat', 'conversations'],
-    queryFn: () =>
-      api.get('chat/conversations').json<{ conversations: Conversation[] }>(),
+    queryFn: async () => {
+      const res = await api.get('chat/conversations').json<{ success: boolean; data: BackendConversation[] }>()
+      return res.data
+    },
     staleTime: 0,
   })
+
+  useEffect(() => {
+    if (query.data) {
+      const convs = query.data.map(toConversation)
+      setConversations(convs)
+    }
+  }, [query.data, setConversations])
+
+  return query
 }
 
 export function useMessages(convId: number | null) {
-  const lastMsgId = useRef(0)
   const { setMessages } = useChatStore()
 
   const query = useQuery({
     queryKey: ['chat', 'messages', convId],
     queryFn: async () => {
-      const data = await api
-        .get(`chat/conversations/${convId}/messages?after=${lastMsgId.current}`)
-        .json<{ messages: Message[] }>()
-      return data
+      const res = await api.get(`chat/conversations/${convId}/messages`).json<{ success: boolean; data: Message[] }>()
+      return res.data
     },
     enabled: !!convId,
     refetchInterval: convId ? 3000 : false,
@@ -32,13 +71,8 @@ export function useMessages(convId: number | null) {
   })
 
   useEffect(() => {
-    if (query.data?.messages && convId) {
-      if (query.data.messages.length > 0) {
-        lastMsgId.current = Math.max(
-          ...query.data.messages.map((m) => m.id),
-        )
-      }
-      setMessages(convId, query.data.messages)
+    if (query.data && convId) {
+      setMessages(convId, query.data)
     }
   }, [query.data, convId, setMessages])
 
@@ -48,16 +82,16 @@ export function useMessages(convId: number | null) {
 export function useSendMessage() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: SendMessageFormData & { conversation_id: number }) =>
-      api
+    mutationFn: async (data: SendMessageFormData & { conversation_id: number }) => {
+      const res = await api
         .post(`chat/conversations/${data.conversation_id}/messages`, {
           json: { text: data.text },
         })
-        .json<Message>(),
+        .json<{ success: boolean; data: Message }>()
+      return res.data
+    },
     onSuccess: (_data, variables) => {
-      qc.invalidateQueries({
-        queryKey: ['chat', 'messages', variables.conversation_id],
-      })
+      qc.invalidateQueries({ queryKey: ['chat', 'messages', variables.conversation_id] })
       qc.invalidateQueries({ queryKey: ['chat', 'conversations'] })
     },
   })
@@ -66,8 +100,10 @@ export function useSendMessage() {
 export function useCreateConversation() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: { contact_id: number }) =>
-      api.post('chat/conversations', { json: data }).json<Conversation>(),
+    mutationFn: async (data: { contactId: number }) => {
+      const res = await api.post('chat/conversations', { json: data }).json<{ success: boolean; data: Conversation }>()
+      return res.data
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['chat', 'conversations'] })
     },
@@ -77,15 +113,10 @@ export function useCreateConversation() {
 export function useTherapists() {
   return useQuery({
     queryKey: ['chat', 'therapists'],
-    queryFn: () => api.get('chat/therapists').json<{ data: User[] }>(),
-    staleTime: 30_000,
-  })
-}
-
-export function useContacts() {
-  return useQuery({
-    queryKey: ['chat', 'contacts'],
-    queryFn: () => api.get('chat/contacts').json<{ contacts: Contact[] }>(),
+    queryFn: async () => {
+      const res = await api.get('chat/therapists').json<{ success: boolean; data: User[] }>()
+      return res.data
+    },
     staleTime: 30_000,
   })
 }

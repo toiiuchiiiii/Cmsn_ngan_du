@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useAuthStore } from '@/stores/auth-store'
 import { useChatStore } from '@/stores/chat-store'
 import { useConversations, useTherapists, useCreateConversation } from '@/hooks/use-chat'
@@ -28,29 +28,22 @@ function ContactListSkeleton() {
 export function ContactList({ onSelectConversation }: ContactListProps) {
   const activeConversationId = useChatStore((s) => s.activeConversationId)
   const setActiveConversation = useChatStore((s) => s.setActiveConversation)
-  const setConversations = useChatStore((s) => s.setConversations)
+  const conversations = useChatStore((s) => s.conversations)
   const currentUser = useAuthStore((s) => s.user)
   const [startedIds, setStartedIds] = useState<Set<number>>(new Set())
 
-  const { data, isLoading, isError, error, refetch } = useConversations()
+  const { isLoading, isError, error, refetch } = useConversations()
   const therapistsQuery = useTherapists()
   const createConv = useCreateConversation()
 
-  const convs = data?.conversations ?? []
-  const therapists = therapistsQuery.data?.data ?? []
-  const existingContactIds = new Set(convs.map(c => c.participants?.find(p => p.id !== currentUser?.id)?.id).filter(Boolean))
+  const therapists = therapistsQuery.data ?? []
+  const existingContactIds = new Set(conversations.map(c => c.participants?.find(p => p.id !== currentUser?.id)?.id).filter(Boolean))
 
   const availableTherapists = therapists.filter(t => !existingContactIds.has(t.id) && !startedIds.has(t.id))
 
-  useEffect(() => {
-    if (data?.conversations) {
-      setConversations(data.conversations)
-    }
-  }, [data, setConversations])
-
   const handleStartChat = async (therapistId: number) => {
     try {
-      const conv = await createConv.mutateAsync({ contact_id: therapistId })
+      const conv = await createConv.mutateAsync({ contactId: therapistId })
       setActiveConversation(conv.id)
       onSelectConversation(conv.id)
       setStartedIds(prev => new Set([...prev, therapistId]))
@@ -80,9 +73,9 @@ export function ContactList({ onSelectConversation }: ContactListProps) {
 
   return (
     <div>
-      {convs.length > 0 && (
+      {conversations.length > 0 && (
         <div className="divide-y divide-border" role="list" aria-label="Danh sách hội thoại">
-          {convs.map((conv) => (
+          {conversations.map((conv) => (
             <div key={conv.id} role="listitem">
               <ContactItem
                 conversation={conv}
@@ -127,7 +120,7 @@ export function ContactList({ onSelectConversation }: ContactListProps) {
         </div>
       )}
 
-      {convs.length === 0 && availableTherapists.length === 0 && (
+      {conversations.length === 0 && availableTherapists.length === 0 && (
         <div className="flex flex-col items-center py-16 px-4 text-center">
           <div className="mb-4 text-fg-tertiary">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
