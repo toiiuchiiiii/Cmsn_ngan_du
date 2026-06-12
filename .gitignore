@@ -6,3 +6,4 @@ backend/mindwell.db-wal
 .DS_Store
 Thumbs.db
 .env
+/frontend/@

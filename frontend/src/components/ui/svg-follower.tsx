@@ -1,5 +1,3 @@
-"use client"
-
 import type React from "react"
 import { useRef, useEffect, useCallback, useState } from "react"
 
@@ -17,20 +15,14 @@ interface Point {
 }
 
 interface SVGFollowerProps {
-  width?: number | string
-  height?: number | string
   colors?: string[]
   removeDelay?: number
-  autoPlay?: boolean
   className?: string
 }
 
 export function SVGFollower({
-  width = 1400,
-  height = 1200,
   colors = ["red", "blue", "green", "yellow", "white"],
   removeDelay = 400,
-  autoPlay = false,
   className = "",
 }: SVGFollowerProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -40,8 +32,6 @@ export function SVGFollower({
   const [isRecording, setIsRecording] = useState(false)
   const recordingRef = useRef<Position[]>([])
   const [size, setSize] = useState({ width: 1400, height: 1200 })
-  const removeDelayRef = useRef(removeDelay)
-  removeDelayRef.current = removeDelay
 
   class Follower {
     private points: Point[] = []
@@ -141,18 +131,18 @@ export function SVGFollower({
     }
 
     private makeSquare(point: Point) {
-      const size = (Math.abs(point.direction.x) + Math.abs(point.direction.y)) * 1.5
+      const sz = (Math.abs(point.direction.x) + Math.abs(point.direction.y)) * 1.5
       const square = document.createElementNS("http://www.w3.org/2000/svg", "rect")
-      square.setAttribute("width", String(size))
-      square.setAttribute("height", String(size))
+      square.setAttribute("width", String(sz))
+      square.setAttribute("height", String(sz))
       square.style.fill = this.color
       this.moveShape(square, point)
     }
 
     private makeTriangle(point: Point) {
-      const size = (Math.abs(point.direction.x) + Math.abs(point.direction.y)) * 1.5
+      const sz = (Math.abs(point.direction.x) + Math.abs(point.direction.y)) * 1.5
       const triangle = document.createElementNS("http://www.w3.org/2000/svg", "polygon")
-      triangle.setAttribute("points", `0,0 ${size},${size / 2} 0,${size}`)
+      triangle.setAttribute("points", `0,0 ${sz},${sz / 2} 0,${sz}`)
       triangle.style.fill = this.color
       this.moveShape(triangle, point)
     }
@@ -190,12 +180,12 @@ export function SVGFollower({
 
       if (isRecording) {
         recordingRef.current.push({
-          x: (position.x / (typeof width === 'number' ? width : 1400)) * 100,
-          y: (position.y / (typeof height === 'number' ? height : 1200)) * 100,
+          x: (position.x / size.width) * 100,
+          y: (position.y / size.height) * 100,
         })
       }
     },
-    [width, height, isRecording],
+    [size, isRecording],
   )
 
   const handleTouchMove = useCallback(
@@ -214,12 +204,12 @@ export function SVGFollower({
 
       if (isRecording) {
         recordingRef.current.push({
-          x: (position.x / (typeof width === 'number' ? width : 1400)) * 100,
-          y: (position.y / (typeof height === 'number' ? height : 1200)) * 100,
+          x: (position.x / size.width) * 100,
+          y: (position.y / size.height) * 100,
         })
       }
     },
-    [width, height, isRecording],
+    [size, isRecording],
   )
 
   const startRecording = () => {
@@ -237,7 +227,7 @@ export function SVGFollower({
     animationRef.current = requestAnimationFrame(animate)
   }, [])
 
-  // Track container size with ResizeObserver
+  // Track container size
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
@@ -250,35 +240,6 @@ export function SVGFollower({
 
     return () => ro.disconnect()
   }, [])
-
-  // Fullscreen mode: track mouse/touch via window
-  useEffect(() => {
-    if (!autoPlay) return
-
-    const getPos = (clientX: number, clientY: number): Position | null => {
-      const rect = containerRef.current?.getBoundingClientRect()
-      if (!rect) return null
-      return { x: clientX - rect.left, y: clientY - rect.top }
-    }
-
-    const addPos = (pos: Position | null) => {
-      if (!pos) return
-      followersRef.current.forEach((f) => f.add(pos))
-    }
-
-    const handleGlobalMouseMove = (e: MouseEvent) => addPos(getPos(e.clientX, e.clientY))
-    const handleGlobalTouchMove = (e: TouchEvent) => {
-      const touch = e.touches[0]
-      if (touch) addPos(getPos(touch.clientX, touch.clientY))
-    }
-
-    window.addEventListener("mousemove", handleGlobalMouseMove, { passive: true })
-    window.addEventListener("touchmove", handleGlobalTouchMove, { passive: true })
-    return () => {
-      window.removeEventListener("mousemove", handleGlobalMouseMove)
-      window.removeEventListener("touchmove", handleGlobalTouchMove)
-    }
-  }, [autoPlay])
 
   useEffect(() => {
     if (!svgRef.current) return
@@ -294,26 +255,18 @@ export function SVGFollower({
     }
   }, [colors, animate])
 
-  const handleContainerMouseMove = autoPlay ? undefined : handleMouseMove
-  const handleContainerTouchMove = autoPlay ? undefined : handleTouchMove
-
   return (
     <div
       ref={containerRef}
       className={`relative overflow-hidden ${className}`}
-      onMouseMove={handleContainerMouseMove}
-      onTouchMove={handleContainerTouchMove}
-      onMouseDown={autoPlay ? undefined : startRecording}
-      onMouseUp={autoPlay ? undefined : stopRecording}
-      onTouchStart={autoPlay ? undefined : startRecording}
-      onTouchEnd={autoPlay ? undefined : stopRecording}
+      onMouseMove={handleMouseMove}
+      onTouchMove={handleTouchMove}
+      onMouseDown={startRecording}
+      onMouseUp={stopRecording}
+      onTouchStart={startRecording}
+      onTouchEnd={stopRecording}
     >
-      <svg
-        ref={svgRef}
-        viewBox={`0 0 ${size.width} ${size.height}`}
-        xmlns="http://www.w3.org/2000/svg"
-        className="absolute inset-0 w-full h-full"
-      />
+      <svg ref={svgRef} viewBox={`0 0 ${size.width} ${size.height}`} xmlns="http://www.w3.org/2000/svg" className="absolute inset-0 w-full h-full" />
     </div>
   )
 }
