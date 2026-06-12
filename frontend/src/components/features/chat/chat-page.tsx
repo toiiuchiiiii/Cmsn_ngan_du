@@ -20,12 +20,9 @@ export function ChatPage() {
     }
   }, [activeConversationId])
 
-  const handleSelectConversation = useCallback(
-    (_id: number) => {
-      setShowPanel(true)
-    },
-    [],
-  )
+  const handleSelectConversation = useCallback(() => {
+    setShowPanel(true)
+  }, [])
 
   const handleBack = useCallback(() => {
     setShowPanel(false)
@@ -40,35 +37,25 @@ export function ChatPage() {
           </svg>
         </div>
         <h1 className="font-serif text-2xl text-fg-primary mb-2">Vui lòng đăng nhập</h1>
-        <p className="text-fg-secondary text-sm">
-          Bạn cần đăng nhập để sử dụng tính năng nhắn tin.
-        </p>
+        <p className="text-fg-secondary text-sm">Bạn cần đăng nhập để sử dụng tính năng nhắn tin.</p>
       </main>
     )
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex">
+    <div className="h-[calc(100vh-4rem)] flex bg-canvas">
       <section
-        className={`w-full md:w-80 lg:w-96 border-r border-border flex-shrink-0 bg-canvas ${
+        className={`w-full md:w-80 lg:w-96 border-r border-border flex-shrink-0 bg-surface/50 ${
           showPanel ? 'hidden md:flex' : 'flex'
         } flex-col`}
-        aria-label="Danh sách hội thoại"
       >
-        <div className="border-b border-border px-4 py-4">
-          <h1 className="font-serif text-xl text-fg-primary">Tin nhắn</h1>
-          <p className="text-xs text-fg-tertiary mt-0.5">Trò chuyện với chuyên gia tư vấn</p>
-        </div>
-        <div className="flex-1 overflow-y-auto">
-          <ContactList onSelectConversation={handleSelectConversation} />
-        </div>
+        <ContactList onSelectConversation={handleSelectConversation} />
       </section>
 
       <section
         className={`flex-1 flex flex-col bg-canvas ${
           showPanel || 'hidden md:flex'
         }`}
-        aria-label="Khung hội thoại"
       >
         <ConversationPanel onBack={handleBack} />
       </section>
