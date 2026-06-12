@@ -1,6 +1,7 @@
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { createAppointmentSchema, type CreateAppointmentFormData } from '@/lib/appointment-schemas'
+import { useState, useMemo } from 'react'
+import { ScrollPicker } from '@/components/ui/scroll-picker'
+import { TimeSlotPicker } from '@/components/ui/time-slot-picker'
+import type { CreateAppointmentFormData } from '@/lib/appointment-schemas'
 
 interface AppointmentBookProps {
   onSubmit: (data: CreateAppointmentFormData) => Promise<void>
@@ -9,44 +10,147 @@ interface AppointmentBookProps {
   error?: Error | null
 }
 
-export function AppointmentBook({ onSubmit, isLoading, isError, error }: AppointmentBookProps) {
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm({
-    resolver: zodResolver(createAppointmentSchema),
-    defaultValues: { date_time: '', notes: '' },
-  })
+const MONTHS = [
+  'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
+  'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12',
+]
 
-  const handleFormSubmit = async (data: CreateAppointmentFormData) => {
-    await onSubmit(data)
-    reset()
+function getDaysInMonth(year: number, month: number): number {
+  return new Date(year, month, 0).getDate()
+}
+
+export function AppointmentBook({ onSubmit, isLoading, isError, error }: AppointmentBookProps) {
+  const now = useMemo(() => new Date(), [])
+
+  // Date state
+  const [selectedDay, setSelectedDay] = useState(now.getDate().toString())
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1)
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear())
+  const [selectedTime, setSelectedTime] = useState<string | null>(null)
+  const [notes, setNotes] = useState('')
+
+  // Generate lists for pickers
+  const years = useMemo(() => {
+    const y: string[] = []
+    for (let i = now.getFullYear(); i <= now.getFullYear() + 2; i++) {
+      y.push(i.toString())
+    }
+    return y
+  }, [now])
+
+  const days = useMemo(() => {
+    const max = getDaysInMonth(selectedYear, selectedMonth)
+    const d: string[] = []
+    for (let i = 1; i <= max; i++) {
+      d.push(i.toString())
+    }
+    return d
+  }, [selectedYear, selectedMonth])
+
+  const months = useMemo(() => {
+    if (selectedYear === now.getFullYear()) {
+      return MONTHS.slice(now.getMonth())
+    }
+    return MONTHS
+  }, [selectedYear, now])
+
+  const handleMonthChange = (monthLabel: string) => {
+    const monthNum = MONTHS.indexOf(monthLabel) + 1
+    setSelectedMonth(monthNum)
+    const max = getDaysInMonth(selectedYear, monthNum)
+    if (parseInt(selectedDay) > max) {
+      setSelectedDay(max.toString())
+    }
   }
 
+  const handleYearChange = (yearStr: string) => {
+    const year = parseInt(yearStr)
+    setSelectedYear(year)
+    if (year === now.getFullYear()) {
+      const newMonth = now.getMonth() + 1
+      setSelectedMonth(newMonth)
+    }
+    const max = getDaysInMonth(year, selectedMonth)
+    if (parseInt(selectedDay) > max) {
+      setSelectedDay(max.toString())
+    }
+  }
+
+  const buildDateString = (): string => {
+    const month = selectedMonth.toString().padStart(2, '0')
+    const day = selectedDay.padStart(2, '0')
+    const time = selectedTime || '08:00'
+    return `${selectedYear}-${month}-${day}T${time}:00.000Z`
+  }
+
+  const handleSubmit = async () => {
+    const dateStr = buildDateString()
+    await onSubmit({ date_time: dateStr, notes: notes || undefined })
+    setSelectedTime(null)
+    setNotes('')
+  }
+
+  const hasValidDate = selectedDay && selectedMonth && selectedYear
+  const canSubmit = hasValidDate && selectedTime
+
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-5" noValidate>
+    <div className="space-y-6">
+      {/* Scroll Wheel Date Picker */}
       <div>
-        <label htmlFor="appointment-date" className="block text-sm font-medium text-fg-secondary mb-1.5">
-          Chọn thời gian
-        </label>
-        <input
-          id="appointment-date"
-          type="datetime-local"
-          aria-required="true"
-          aria-invalid={!!errors.date_time}
-          aria-describedby={errors.date_time ? 'date-time-error' : undefined}
-          className="w-full rounded-xl bg-surface border border-border px-4 py-2.5 text-fg-primary focus:outline-none focus:ring-2 focus:ring-accent-sage focus:border-accent-sage transition-colors [color-scheme:light]"
-          {...register('date_time')}
-        />
-        {errors.date_time && (
-          <p id="date-time-error" className="mt-1 text-sm text-crisis" role="alert">
-            {errors.date_time.message}
-          </p>
-        )}
+        <p className="text-sm font-medium text-fg-secondary mb-4 text-center">Chọn ngày</p>
+        <div className="flex items-start justify-center gap-4">
+          {/* Day */}
+          <div className="flex-1 max-w-[80px]">
+            <ScrollPicker
+              label="Ngày"
+              items={days}
+              value={selectedDay}
+              onChange={(v) => setSelectedDay(v)}
+            />
+          </div>
+          {/* Month */}
+          <div className="flex-1 max-w-[110px]">
+            <ScrollPicker
+              label="Tháng"
+              items={months}
+              value={MONTHS[selectedMonth - 1]}
+              onChange={handleMonthChange}
+            />
+          </div>
+          {/* Year */}
+          <div className="flex-1 max-w-[90px]">
+            <ScrollPicker
+              label="Năm"
+              items={years}
+              value={selectedYear.toString()}
+              onChange={handleYearChange}
+            />
+          </div>
+        </div>
       </div>
 
+      {/* Time Slot Picker */}
+      {hasValidDate && (
+        <div className="pt-2">
+          <TimeSlotPicker
+            selectedSlot={selectedTime}
+            onSelect={setSelectedTime}
+          />
+        </div>
+      )}
+
+      {/* Selected date summary */}
+      {canSubmit && (
+        <div className="rounded-xl bg-accent-sage/10 border border-accent-sage/20 px-4 py-3 text-center">
+          <p className="text-sm text-fg-secondary">
+            <span className="font-medium text-fg-primary">Đã chọn:</span>{' '}
+            {selectedDay}/{selectedMonth.toString().padStart(2, '0')}/{selectedYear}{' '}
+            lúc <span className="font-semibold text-accent-sage">{selectedTime}</span>
+          </p>
+        </div>
+      )}
+
+      {/* Notes */}
       <div>
         <label htmlFor="appointment-notes" className="block text-sm font-medium text-fg-secondary mb-1.5">
           Ghi chú <span className="text-fg-tertiary">(không bắt buộc)</span>
@@ -54,22 +158,11 @@ export function AppointmentBook({ onSubmit, isLoading, isError, error }: Appoint
         <textarea
           id="appointment-notes"
           placeholder="Chia sẻ lý do bạn muốn đặt lịch..."
-          aria-invalid={!!errors.notes}
-          aria-describedby={errors.notes ? 'notes-error' : undefined}
-          rows={4}
+          rows={3}
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
           className="w-full rounded-xl bg-surface border border-border px-4 py-2.5 text-fg-primary placeholder:text-fg-disabled focus:outline-none focus:ring-2 focus:ring-accent-sage focus:border-accent-sage transition-colors resize-none"
-          onInput={(e) => {
-            const el = e.currentTarget
-            el.style.height = 'auto'
-            el.style.height = `${el.scrollHeight}px`
-          }}
-          {...register('notes')}
         />
-        {errors.notes && (
-          <p id="notes-error" className="mt-1 text-sm text-crisis" role="alert">
-            {errors.notes.message}
-          </p>
-        )}
       </div>
 
       {isError && (
@@ -81,8 +174,9 @@ export function AppointmentBook({ onSubmit, isLoading, isError, error }: Appoint
       )}
 
       <button
-        type="submit"
-        disabled={isLoading}
+        type="button"
+        disabled={!canSubmit || isLoading}
+        onClick={handleSubmit}
         className="w-full rounded-full bg-accent-sage text-white font-medium py-2.5 px-6 transition-colors hover:bg-accent-sage/90 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-sage focus-visible:ring-offset-2"
       >
         {isLoading ? (
@@ -97,6 +191,6 @@ export function AppointmentBook({ onSubmit, isLoading, isError, error }: Appoint
           'Đặt lịch hẹn'
         )}
       </button>
-    </form>
+    </div>
   )
 }
