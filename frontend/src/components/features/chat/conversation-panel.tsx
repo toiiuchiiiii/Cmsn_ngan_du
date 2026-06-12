@@ -90,7 +90,7 @@ export function ConversationPanel({ onBack }: ConversationPanelProps) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto py-2 space-y-0.5 bg-[#f0f2f5]">
+      <div className="flex-1 overflow-y-auto py-2 space-y-0.5 bg-[#f0f2f5]" style={{ backgroundImage: 'radial-gradient(circle at 25px 25px, #e4e6eb 1px, transparent 0)', backgroundSize: '50px 50px' }}>
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full px-4">
             <div className="text-center bg-white rounded-2xl px-6 py-4 shadow-sm">
@@ -106,10 +106,9 @@ export function ConversationPanel({ onBack }: ConversationPanelProps) {
               <MessageBubble
                 key={msg.id}
                 message={msg}
-                isOwn={msg.sender_id === currentUserId}
+                isOwn={Number(msg.sender_id) === Number(currentUserId)}
                 showDateSeparator={showDateSep}
                 dateSeparator={msg.created_at}
-                isFirstOfGroup={idx === 0 || messages[idx - 1].sender_id !== msg.sender_id}
               />
             )
           })
