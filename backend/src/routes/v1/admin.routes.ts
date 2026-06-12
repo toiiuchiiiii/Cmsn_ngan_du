@@ -7,6 +7,7 @@ import { authenticate, requireRole } from '../../middleware/auth.middleware.js';
 import { asyncHandler } from '../../middleware/async-handler.js';
 import { success, errorResponse } from '../../utils/response.js';
 import { logger } from '../../utils/logger.js';
+import { sendEmail, buildRoleEmail } from '../../services/email.service.js';
 import type { AuthRequest } from '../../middleware/auth.middleware.js';
 
 const router = Router();
@@ -72,6 +73,13 @@ router.patch('/role-requests/:id', authenticate, requireRole('admin'), asyncHand
 
   if (action === 'approved') {
     await db.update(users).set({ role: 'therapist' }).where(eq(users.id, reqRow.userId));
+  }
+
+  // Send email notification
+  const userRow = (await db.select().from(users).where(eq(users.id, reqRow.userId)).limit(1))[0];
+  if (userRow) {
+    const { subject, html } = buildRoleEmail(userRow.name, action as 'approved' | 'rejected');
+    await sendEmail(userRow.email, subject, html);
   }
 
   logger.info({ adminId: req.userId, requestId, userId: reqRow.userId, action }, 'Role request processed');
