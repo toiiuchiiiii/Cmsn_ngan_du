@@ -13,14 +13,12 @@ export function EntryCard({ entry, onDelete }: EntryCardProps) {
   const mood = entry.mood as Mood
   const emoji = MOOD_EMOJIS[mood] || '📝'
   const created = new Date(entry.created_at)
-  const dateStr = created.toLocaleDateString('vi-VN', {
-    year: 'numeric',
-    month: 'numeric',
-    day: 'numeric',
-  })
-  const timeStr = created.toLocaleTimeString('vi-VN', {
+  const savedTime = created.toLocaleString('vi-VN', {
     hour: '2-digit',
     minute: '2-digit',
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric',
   })
 
   const handleDelete = () => {
@@ -45,15 +43,6 @@ export function EntryCard({ entry, onDelete }: EntryCardProps) {
         >
           <div className="flex items-center gap-2 mb-1.5">
             <span className="text-lg" aria-hidden="true">{emoji}</span>
-            <div className="flex items-baseline gap-1.5">
-              <time className="text-xs text-fg-tertiary font-medium" dateTime={entry.created_at}>
-                {dateStr}
-              </time>
-              <span className="text-[10px] text-fg-tertiary/60">•</span>
-              <time className="text-[10px] text-fg-tertiary/60" dateTime={entry.created_at}>
-                {timeStr}
-              </time>
-            </div>
           </div>
 
           <p className={`text-sm text-fg-secondary leading-relaxed ${expanded ? '' : 'line-clamp-2'}`}>
@@ -106,6 +95,15 @@ export function EntryCard({ entry, onDelete }: EntryCardProps) {
           ))}
         </div>
       )}
+
+      <div className="mt-3 pt-2 border-t border-border/50 flex items-center gap-1.5">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-fg-tertiary/50" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+        </svg>
+        <time className="text-[11px] text-fg-tertiary/60" dateTime={entry.created_at}>
+          Đã lưu lúc {savedTime}
+        </time>
+      </div>
     </article>
   )
 }
