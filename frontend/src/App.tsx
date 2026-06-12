@@ -12,7 +12,8 @@ import { ChatPage } from '@/components/features/chat/chat-page'
 import { PageAgent } from '@/components/features/agent/page-agent'
 import { ExpandableTabs } from '@/components/ui/expandable-tabs'
 import { SVGFollower } from '@/components/ui/svg-follower'
-import { BookOpen, ClipboardCheck, Users, Calendar, MessageCircle, Home, PlusCircle } from 'lucide-react'
+import { BookOpen, ClipboardCheck, Users, Calendar, MessageCircle, Home, PlusCircle, UserCog } from 'lucide-react'
+import { RoleRequestPage } from '@/components/features/auth/role-request'
 import type { LucideIcon } from 'lucide-react'
 
 const navTabs: ({ title: string; icon: LucideIcon } | { type: 'separator' })[] = [
@@ -58,6 +59,15 @@ function NavBar() {
                   >
                     <PlusCircle size={14} />
                     Quản lý test
+                  </Link>
+                )}
+                {role === 'patient' && (
+                  <Link
+                    to="/role-request"
+                    className="hidden sm:inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs text-fg-secondary font-medium hover:bg-surface-hover transition-colors no-underline"
+                  >
+                    <UserCog size={14} />
+                    Làm tư vấn viên
                   </Link>
                 )}
                 <span className="text-sm text-fg-secondary mr-2 hidden sm:inline">{user.name}</span>
@@ -185,6 +195,7 @@ function AppLayout() {
           <Route path="/community/:id" element={<PostDetail />} />
           <Route path="/appointments" element={<AppointmentsPage />} />
           <Route path="/chat" element={<ChatPage />} />
+          <Route path="/role-request" element={<RoleRequestPage />} />
         </Routes>
         <PageAgent />
       </div>

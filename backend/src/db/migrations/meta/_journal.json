@@ -15,6 +15,13 @@
       "when": 1781228193096,
       "tag": "0001_outgoing_matthew_murdock",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781228841614,
+      "tag": "0002_modern_zeigeist",
+      "breakpoints": true
     }
   ]
 }
