@@ -1,5 +1,6 @@
 import { eq, desc, and, inArray, sql } from 'drizzle-orm';
 import { db } from '../config/database.js';
+import { users } from '../db/schema/users.js';
 import {
   conversations,
   conversationParticipants,
@@ -41,15 +42,20 @@ export class ConversationRepository {
     return this.findById(result[0].conversationId);
   }
 
-  async findByUserId(userId: number): Promise<{ conversation: Conversation; lastMessage: unknown; participantIds: number[] }[]> {
+  async findByUserId(userId: number): Promise<{ conversation: Conversation; lastMessage: unknown; participants: { id: number; name: string; email: string; role: string; avatarUrl: string | null }[] }[]> {
     const result = await db
       .select({
         conversation: conversations,
         lastMessage: messages,
         participantId: conversationParticipants.userId,
+        userName: users.name,
+        userEmail: users.email,
+        userRole: users.role,
+        userAvatarUrl: users.avatarUrl,
       })
       .from(conversations)
       .innerJoin(conversationParticipants, eq(conversations.id, conversationParticipants.conversationId))
+      .innerJoin(users, eq(conversationParticipants.userId, users.id))
       .leftJoin(
         messages,
         sql`${messages.conversationId} = ${conversations.id} AND ${messages.createdAt} = (
@@ -67,17 +73,17 @@ export class ConversationRepository {
       )
       .orderBy(desc(conversations.updatedAt));
 
-    const grouped = new Map<number, { conversation: Conversation; lastMessage: unknown; participantIds: number[] }>();
+    const grouped = new Map<number, { conversation: Conversation; lastMessage: unknown; participants: { id: number; name: string; email: string; role: string; avatarUrl: string | null }[] }>();
 
     for (const row of result) {
       const existing = grouped.get(row.conversation.id);
       if (existing) {
-        existing.participantIds.push(row.participantId);
+        existing.participants.push({ id: row.participantId, name: row.userName, email: row.userEmail, role: row.userRole, avatarUrl: row.userAvatarUrl });
       } else {
         grouped.set(row.conversation.id, {
           conversation: row.conversation,
           lastMessage: row.lastMessage,
-          participantIds: [row.participantId],
+          participants: [{ id: row.participantId, name: row.userName, email: row.userEmail, role: row.userRole, avatarUrl: row.userAvatarUrl }],
         });
       }
     }

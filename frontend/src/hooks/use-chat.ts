@@ -19,7 +19,7 @@ interface BackendConversation {
     is_read: number
     created_at: string
   } | null
-  participantIds: number[]
+  participants: { id: number; name: string; email: string; role: string; avatarUrl: string | null }[]
 }
 
 function toConversation(raw: BackendConversation): Conversation {
@@ -27,7 +27,7 @@ function toConversation(raw: BackendConversation): Conversation {
     id: raw.conversation.id,
     created_at: raw.conversation.created_at,
     updated_at: raw.conversation.updated_at,
-    participants: [],
+    participants: raw.participants,
     last_message: raw.lastMessage
       ? { ...raw.lastMessage, is_read: !!raw.lastMessage.is_read }
       : undefined,
