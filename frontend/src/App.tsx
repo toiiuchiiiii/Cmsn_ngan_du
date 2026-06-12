@@ -169,17 +169,17 @@ function HomePage() {
 
       <section className="mt-32 grid md:grid-cols-3 gap-6">
         {[
-          { icon: ClipboardCheck, title: 'Bài kiểm tra', desc: 'Đánh giá sức khỏe tâm thần qua các bài kiểm tra chuẩn hóa' },
-          { icon: BookOpen, title: 'Nhật ký cảm xúc', desc: 'Ghi lại cảm xúc hàng ngày và theo dõi sự thay đổi theo thời gian' },
-          { icon: MessageCircle, title: 'Tư vấn trực tuyến', desc: 'Trò chuyện bảo mật với chuyên gia tư vấn tâm lý' },
+          { icon: ClipboardCheck, title: 'Bài kiểm tra', desc: 'Đánh giá sức khỏe tâm thần qua các bài kiểm tra chuẩn hóa', to: '/test' },
+          { icon: BookOpen, title: 'Nhật ký cảm xúc', desc: 'Ghi lại cảm xúc hàng ngày và theo dõi sự thay đổi theo thời gian', to: '/diary' },
+          { icon: MessageCircle, title: 'Tư vấn trực tuyến', desc: 'Trò chuyện bảo mật với chuyên gia tư vấn tâm lý', to: '/chat' },
         ].map((item) => (
-          <div key={item.title} className="rounded-2xl border border-border bg-surface p-6 text-center hover:shadow-sm transition-shadow">
+          <Link key={item.title} to={item.to} className="block rounded-2xl border border-border bg-surface p-6 text-center hover:shadow-sm transition-shadow no-underline">
             <div className="w-12 h-12 rounded-xl bg-accent-sage-surface flex items-center justify-center mx-auto mb-4">
               <item.icon size={24} className="text-accent-sage" />
             </div>
             <h3 className="font-serif text-lg text-fg-primary mb-2">{item.title}</h3>
             <p className="text-sm text-fg-tertiary leading-relaxed">{item.desc}</p>
-          </div>
+          </Link>
         ))}
       </section>
     </main>
