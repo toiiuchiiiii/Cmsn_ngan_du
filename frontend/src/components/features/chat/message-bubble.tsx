@@ -5,6 +5,8 @@ interface MessageBubbleProps {
   isOwn: boolean
   showDateSeparator?: boolean
   dateSeparator?: string
+  isGroupStart?: boolean
+  isGroupEnd?: boolean
 }
 
 function formatTime(dateStr: string) {
@@ -22,7 +24,11 @@ function formatDateSeparator(dateStr: string) {
   return date.toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric', year: 'numeric' })
 }
 
-export function MessageBubble({ message, isOwn, showDateSeparator, dateSeparator }: MessageBubbleProps) {
+export function MessageBubble({ message, isOwn, showDateSeparator, dateSeparator, isGroupStart, isGroupEnd }: MessageBubbleProps) {
+  const topGap = isGroupStart ? 'mt-3' : 'mt-[2px]'
+  const roundedOwn = isGroupEnd ? 'rounded-[18px] rounded-br-[4px]' : 'rounded-[18px]'
+  const roundedOther = isGroupEnd ? 'rounded-[18px] rounded-bl-[4px]' : 'rounded-[18px]'
+
   return (
     <>
       {showDateSeparator && dateSeparator && (
@@ -34,12 +40,12 @@ export function MessageBubble({ message, isOwn, showDateSeparator, dateSeparator
       )}
 
       {isOwn ? (
-        <div className="flex justify-end px-3 py-0.5">
-          <div className="max-w-[75%] bg-[#0084ff] text-white rounded-[18px] rounded-br-[4px] px-3 py-2 shadow-sm">
-            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.text}</p>
-            <div className="flex items-center justify-end gap-1 -mb-1 -mr-1 mt-1">
-              <span className="text-[10px] text-white/70">{formatTime(message.created_at)}</span>
-              <span className="text-[10px] text-white/70">
+        <div className={`flex justify-end px-4 ${topGap}`}>
+          <div className={`max-w-[75%] bg-[#0084ff] text-white ${roundedOwn} px-3 py-[6px] shadow-sm`}>
+            <p className="text-[15px] leading-[1.35] whitespace-pre-wrap break-words">{message.text}</p>
+            <div className="flex items-center justify-end gap-1 -mb-[2px] -mr-[2px] mt-[2px]">
+              <span className="text-[11px] text-white/70">{formatTime(message.created_at)}</span>
+              <span className="text-[11px] text-white/70">
                 {message.is_read ? (
                   <svg width="14" height="14" viewBox="0 0 22 16" fill="none">
                     <path d="M16 2L6 12l-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -55,11 +61,11 @@ export function MessageBubble({ message, isOwn, showDateSeparator, dateSeparator
           </div>
         </div>
       ) : (
-        <div className="flex justify-start px-3 py-0.5">
-          <div className="max-w-[75%] bg-white text-fg-primary rounded-[18px] rounded-bl-[4px] px-3 py-2 shadow-sm border border-border/30">
-            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.text}</p>
-            <div className="flex items-center justify-start gap-1 -mb-1 -mr-1 mt-1">
-              <span className="text-[10px] text-fg-tertiary/60">{formatTime(message.created_at)}</span>
+        <div className={`flex justify-start px-4 ${topGap}`}>
+          <div className={`max-w-[75%] bg-white text-fg-primary ${roundedOther} px-3 py-[6px] shadow-sm border border-border/20`}>
+            <p className="text-[15px] leading-[1.35] whitespace-pre-wrap break-words">{message.text}</p>
+            <div className="flex items-center justify-start gap-1 -mb-[2px] -mr-[2px] mt-[2px]">
+              <span className="text-[11px] text-fg-tertiary/60">{formatTime(message.created_at)}</span>
             </div>
           </div>
         </div>

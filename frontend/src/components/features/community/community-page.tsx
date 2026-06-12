@@ -3,6 +3,20 @@ import { usePosts, useCreatePost, useDeletePost, useLikePost } from '@/hooks/use
 import { PostCreate } from './post-create'
 import { PostCard, PostCardSkeleton } from './post-card'
 import type { CreatePostFormData } from '@/lib/post-schemas'
+import type { Post } from '@/types'
+
+function PostCardItem({ post, onDelete, isDeletePending }: { post: Post; onDelete: (id: number) => void; isDeletePending: boolean }) {
+  const likeMutation = useLikePost(post.id)
+  return (
+    <PostCard
+      post={post}
+      onLike={() => likeMutation.mutate()}
+      onDelete={() => onDelete(post.id)}
+      isLikePending={likeMutation.isPending}
+      isDeletePending={isDeletePending}
+    />
+  )
+}
 
 export function CommunityPage() {
   const { data, isLoading, isError, error, refetch } = usePosts()
@@ -73,19 +87,14 @@ export function CommunityPage() {
 
     return (
       <div className="space-y-3">
-        {posts.map((post) => {
-          const likeMutation = useLikePost(post.id)
-          return (
-            <PostCard
-              key={post.id}
-              post={post}
-              onLike={() => likeMutation.mutate()}
-              onDelete={() => handleDelete(post.id)}
-              isLikePending={likeMutation.isPending}
-              isDeletePending={deleteMutation.isPending}
-            />
-          )
-        })}
+        {posts.map((post) => (
+          <PostCardItem
+            key={post.id}
+            post={post}
+            onDelete={handleDelete}
+            isDeletePending={deleteMutation.isPending}
+          />
+        ))}
       </div>
     )
   }

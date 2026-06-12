@@ -101,7 +101,12 @@ export function ConversationPanel({ onBack }: ConversationPanelProps) {
         ) : (
           messages.map((msg, idx) => {
             const prevMsg = idx > 0 ? messages[idx - 1] : null
+            const nextMsg = idx < messages.length - 1 ? messages[idx + 1] : null
             const showDateSep = !prevMsg || new Date(msg.created_at).toDateString() !== new Date(prevMsg.created_at).toDateString()
+            const isSameSenderAsPrev = prevMsg && Number(prevMsg.sender_id) === Number(msg.sender_id)
+            const isSameSenderAsNext = nextMsg && Number(nextMsg.sender_id) === Number(msg.sender_id)
+            const isGroupStart = !isSameSenderAsPrev
+            const isGroupEnd = !isSameSenderAsNext
             return (
               <MessageBubble
                 key={msg.id}
@@ -109,6 +114,8 @@ export function ConversationPanel({ onBack }: ConversationPanelProps) {
                 isOwn={Number(msg.sender_id) === Number(currentUserId)}
                 showDateSeparator={showDateSep}
                 dateSeparator={msg.created_at}
+                isGroupStart={isGroupStart}
+                isGroupEnd={isGroupEnd}
               />
             )
           })
