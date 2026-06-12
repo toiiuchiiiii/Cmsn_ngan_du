@@ -20,8 +20,8 @@ export function postController(postService: PostService) {
     }),
 
     create: asyncHandler(async (req: AuthRequest, res: Response) => {
-      const { title, content, isAnonymous } = req.body;
-      const post = await postService.create(req.userId!, { title, content, isAnonymous });
+      const { title, content, isAnonymous, guestName, guestEmail } = req.body;
+      const post = await postService.create(req.userId ?? null, { title, content, isAnonymous, guestName, guestEmail });
       res.status(201).json(success(post));
     }),
 
@@ -54,8 +54,8 @@ export function postController(postService: PostService) {
 
     createComment: asyncHandler(async (req: AuthRequest, res: Response) => {
       const postId = parseInt(req.params.id as string, 10);
-      const { content } = req.body;
-      const comment = await postService.createComment(postId, req.userId!, { content });
+      const { content, guestName, guestEmail } = req.body;
+      const comment = await postService.createComment(postId, req.userId ?? null, { content, guestName, guestEmail });
       res.status(201).json(success(comment));
     }),
 

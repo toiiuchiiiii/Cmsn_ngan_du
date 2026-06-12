@@ -3,7 +3,7 @@ import { useAuthStore } from '@/stores/auth-store'
 
 interface PostActionsProps {
   postId: number
-  userId: number
+  userId: number | null
   likeCount: number
   isLiked?: boolean
   onLike: () => void
@@ -24,7 +24,7 @@ export function PostActions({
 }: PostActionsProps) {
   const [confirming, setConfirming] = useState(false)
   const { user } = useAuthStore()
-  const isOwner = user?.id === userId
+  const isOwner = !!(user?.id && userId && user.id === userId)
 
   return (
     <div className="flex items-center gap-3">

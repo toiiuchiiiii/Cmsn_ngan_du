@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -13,6 +14,8 @@ export function PostDetail() {
   const { id } = useParams<{ id: string }>()
   const postId = Number(id)
   const { isAuthenticated } = useAuthStore()
+  const [guestName, setGuestName] = useState('')
+  const [guestEmail, setGuestEmail] = useState('')
 
   const { data: post, isLoading, isError, error } = usePost(postId)
   const { data: commentsData, isLoading: commentsLoading, isError: commentsError } = usePostComments(postId)
@@ -79,8 +82,13 @@ export function PostDetail() {
   })
 
   const handleCommentSubmit = async (data: CreateCommentFormData) => {
-    await createCommentMutation.mutateAsync(data)
+    await createCommentMutation.mutateAsync({
+      ...data,
+      guestName: isAuthenticated ? undefined : guestName,
+      guestEmail: isAuthenticated ? undefined : guestEmail,
+    })
     reset()
+    if (!isAuthenticated) { setGuestName(''); setGuestEmail('') }
   }
 
   const handleLike = () => {
@@ -110,7 +118,7 @@ export function PostDetail() {
           </h1>
 
           <div className="flex items-center gap-2 text-xs text-fg-tertiary mb-5">
-            <span>{post.is_anonymous ? 'Ẩn danh' : (post.author?.name ?? 'Người dùng')}</span>
+            <span>{post.is_anonymous ? 'Ẩn danh' : (post.author?.name ?? post.guest_name ?? 'Người dùng')}</span>
             <span aria-hidden="true">·</span>
             <time dateTime={post.created_at}>{date}</time>
           </div>
@@ -136,9 +144,22 @@ export function PostDetail() {
           Bình luận ({commentsData?.comments?.length ?? 0})
         </h2>
 
-        {isAuthenticated && (
-          <form onSubmit={handleSubmit(handleCommentSubmit)} noValidate className="mb-6">
+        <form onSubmit={handleSubmit(handleCommentSubmit)} noValidate className="mb-6">
             <div className="rounded-lg bg-surface border border-border p-4 space-y-3">
+              {!isAuthenticated && (
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-fg-secondary mb-1.5">Tên</label>
+                    <input type="text" value={guestName} onChange={e => setGuestName(e.target.value)} required placeholder="Tên..."
+                      className="w-full rounded-lg bg-canvas border border-border px-4 py-2.5 text-sm text-fg-primary focus:outline-none focus:ring-2 focus:ring-accent-sage" />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-fg-secondary mb-1.5">Email</label>
+                    <input type="email" value={guestEmail} onChange={e => setGuestEmail(e.target.value)} required placeholder="Email..."
+                      className="w-full rounded-lg bg-canvas border border-border px-4 py-2.5 text-sm text-fg-primary focus:outline-none focus:ring-2 focus:ring-accent-sage" />
+                  </div>
+                </div>
+              )}
               <div>
                 <label htmlFor="comment-content" className="sr-only">
                   Nội dung bình luận
@@ -168,7 +189,6 @@ export function PostDetail() {
               </button>
             </div>
           </form>
-        )}
 
         {commentsLoading && (
           <div className="space-y-3 animate-pulse" aria-busy="true" role="status">

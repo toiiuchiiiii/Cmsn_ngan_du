@@ -71,7 +71,7 @@ export interface Appointment {
 
 export interface Post {
   id: number
-  user_id: number
+  user_id: number | null
   title: string
   content: string
   is_anonymous: boolean
@@ -79,15 +79,19 @@ export interface Post {
   comment_count: number
   created_at: string
   author?: User
+  guest_name?: string
+  guest_email?: string
 }
 
 export interface Comment {
   id: number
   post_id: number
-  user_id: number
+  user_id: number | null
   content: string
   created_at: string
   author?: User
+  guest_name?: string
+  guest_email?: string
 }
 
 export interface Conversation {

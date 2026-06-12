@@ -6,7 +6,10 @@ import type { CreatePostFormData, CreateCommentFormData } from '@/lib/post-schem
 export function usePosts() {
   return useQuery({
     queryKey: ['posts'],
-    queryFn: () => api.get('posts').json<{ posts: Post[] }>(),
+    queryFn: async () => {
+      const res = await api.get('posts').json<{ success: boolean; data: Post[] }>()
+      return { posts: res.data }
+    },
     staleTime: 5 * 60 * 1000,
   })
 }
@@ -14,22 +17,30 @@ export function usePosts() {
 export function usePost(id: number) {
   return useQuery({
     queryKey: ['post', id],
-    queryFn: () => api.get(`posts/${id}`).json<Post>(),
+    queryFn: async () => {
+      const res = await api.get(`posts/${id}`).json<{ success: boolean; data: Post }>()
+      return res.data
+    },
   })
 }
 
 export function usePostComments(postId: number) {
   return useQuery({
     queryKey: ['post', postId, 'comments'],
-    queryFn: () => api.get(`posts/${postId}/comments`).json<{ comments: Comment[] }>(),
+    queryFn: async () => {
+      const res = await api.get(`posts/${postId}/comments`).json<{ success: boolean; data: Comment[] }>()
+      return { comments: res.data }
+    },
   })
 }
 
 export function useCreatePost() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: CreatePostFormData) =>
-      api.post('posts', { json: data }).json<Post>(),
+    mutationFn: async (data: CreatePostFormData) => {
+      const res = await api.post('posts', { json: data }).json<{ success: boolean; data: Post }>()
+      return res.data
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['posts'] }),
   })
 }
@@ -45,8 +56,10 @@ export function useDeletePost() {
 export function useCreateComment(postId: number) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: CreateCommentFormData) =>
-      api.post(`posts/${postId}/comments`, { json: data }).json<Comment>(),
+    mutationFn: async (data: CreateCommentFormData) => {
+      const res = await api.post(`posts/${postId}/comments`, { json: data }).json<{ success: boolean; data: Comment }>()
+      return res.data
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['post', postId] })
       qc.invalidateQueries({ queryKey: ['post', postId, 'comments'] })

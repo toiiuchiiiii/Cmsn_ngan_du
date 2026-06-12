@@ -20,12 +20,12 @@ const controller = postController(service);
 
 router.get('/', controller.list);
 router.get('/:id', controller.getById);
-router.post('/', authenticate, validate(createPostSchema), controller.create);
+router.post('/', validate(createPostSchema), controller.create);
 router.put('/:id', authenticate, validate(updatePostSchema), controller.update);
 router.delete('/:id', authenticate, controller.delete);
 router.post('/:id/like', authenticate, controller.toggleLike);
 router.get('/:id/comments', controller.listComments);
-router.post('/:id/comments', authenticate, validate(createCommentSchema), controller.createComment);
+router.post('/:id/comments', validate(createCommentSchema), controller.createComment);
 router.delete('/:id/comments/:commentId', authenticate, controller.deleteComment);
 
 export default router;

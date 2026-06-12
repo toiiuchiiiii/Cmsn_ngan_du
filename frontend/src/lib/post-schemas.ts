@@ -10,6 +10,8 @@ export const createPostSchema = z.object({
     .min(1, 'Nội dung không được để trống')
     .max(10000, 'Nội dung không được quá 10000 ký tự'),
   isAnonymous: z.boolean().default(false),
+  guestName: z.string().optional(),
+  guestEmail: z.string().optional(),
 })
 
 export const createCommentSchema = z.object({
@@ -17,6 +19,8 @@ export const createCommentSchema = z.object({
     .string()
     .min(1, 'Nội dung không được để trống')
     .max(2000, 'Nội dung không được quá 2000 ký tự'),
+  guestName: z.string().optional(),
+  guestEmail: z.string().optional(),
 })
 
 export type CreatePostFormData = z.infer<typeof createPostSchema>

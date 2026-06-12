@@ -37,7 +37,7 @@ export function PostCard({ post, onLike, onDelete, isLikePending, isDeletePendin
 
       <div className="flex items-center justify-between gap-3 mt-3">
         <div className="flex items-center gap-2 text-xs text-fg-tertiary">
-          <span>{post.is_anonymous ? 'Ẩn danh' : (post.author?.name ?? 'Người dùng')}</span>
+          <span>{post.is_anonymous ? 'Ẩn danh' : (post.author?.name ?? post.guest_name ?? 'Người dùng')}</span>
           <span aria-hidden="true">·</span>
           <time dateTime={post.created_at}>{date}</time>
         </div>

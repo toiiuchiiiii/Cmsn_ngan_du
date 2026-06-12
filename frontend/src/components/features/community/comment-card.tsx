@@ -11,7 +11,7 @@ interface CommentCardProps {
 export function CommentCard({ comment, onDelete, isDeletePending }: CommentCardProps) {
   const [confirming, setConfirming] = useState(false)
   const { user } = useAuthStore()
-  const isOwner = user?.id === comment.user_id
+  const isOwner = user?.id && comment.user_id && user.id === comment.user_id
   const date = new Date(comment.created_at).toLocaleDateString('vi-VN', {
     year: 'numeric',
     month: 'long',
@@ -26,7 +26,7 @@ export function CommentCard({ comment, onDelete, isDeletePending }: CommentCardP
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-sm font-medium text-fg-primary">
-              {comment.author?.name ?? 'Ẩn danh'}
+              {comment.author?.name ?? comment.guest_name ?? 'Ẩn danh'}
             </span>
             <time className="text-xs text-fg-tertiary" dateTime={comment.created_at}>
               {date}

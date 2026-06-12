@@ -21,19 +21,21 @@ export class PostService {
     return post;
   }
 
-  async create(userId: number, data: { title: string; content: string; isAnonymous?: boolean }) {
+  async create(userId: number | null, data: { title: string; content: string; isAnonymous?: boolean; guestName?: string; guestEmail?: string }) {
     const post = await this.postRepo.create({
       userId,
       title: data.title,
       content: data.content,
       isAnonymous: data.isAnonymous ? 1 : 0,
+      guestName: data.guestName,
+      guestEmail: data.guestEmail,
     });
 
     logger.info({ postId: post.id, userId }, 'Post created');
     return post;
   }
 
-  async update(id: number, userId: number, data: Partial<{ title: string; content: string; isAnonymous?: boolean }>) {
+  async update(id: number, userId: number | null, data: Partial<{ title: string; content: string; isAnonymous?: boolean }>) {
     const post = await this.postRepo.findById(id);
     if (!post) {
       throw new NotFoundError('bài viết');
@@ -50,12 +52,12 @@ export class PostService {
     return updated!;
   }
 
-  async delete(id: number, userId: number, userRole: string) {
+  async delete(id: number, userId: number | null, userRole: string) {
     const post = await this.postRepo.findById(id);
     if (!post) {
       throw new NotFoundError('bài viết');
     }
-    if (post.userId !== userId && userRole !== 'admin') {
+    if (userId && post.userId !== userId && userRole !== 'admin') {
       throw new ForbiddenError('Bạn không có quyền xoá bài viết này');
     }
 
@@ -89,7 +91,7 @@ export class PostService {
     return this.commentRepo.findByPostId(postId, page, limit);
   }
 
-  async createComment(postId: number, userId: number, data: { content: string }) {
+  async createComment(postId: number, userId: number | null, data: { content: string; guestName?: string; guestEmail?: string }) {
     const post = await this.postRepo.findById(postId);
     if (!post) {
       throw new NotFoundError('bài viết');
@@ -99,6 +101,8 @@ export class PostService {
       postId,
       userId,
       content: data.content,
+      guestName: data.guestName,
+      guestEmail: data.guestEmail,
     });
 
     await this.postRepo.incrementCommentCount(postId);

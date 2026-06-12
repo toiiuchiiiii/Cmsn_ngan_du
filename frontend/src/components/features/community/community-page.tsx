@@ -1,12 +1,10 @@
 import { useCallback } from 'react'
 import { usePosts, useCreatePost, useDeletePost, useLikePost } from '@/hooks/use-posts'
-import { useAuthStore } from '@/stores/auth-store'
 import { PostCreate } from './post-create'
 import { PostCard, PostCardSkeleton } from './post-card'
 import type { CreatePostFormData } from '@/lib/post-schemas'
 
 export function CommunityPage() {
-  const { isAuthenticated } = useAuthStore()
   const { data, isLoading, isError, error, refetch } = usePosts()
   const createMutation = useCreatePost()
   const deleteMutation = useDeletePost()
@@ -89,23 +87,6 @@ export function CommunityPage() {
           )
         })}
       </div>
-    )
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <main className="max-w-2xl mx-auto px-4 py-24 text-center">
-        <div className="mb-6 text-fg-tertiary">
-          <svg width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden="true">
-            <rect x="10" y="12" width="44" height="44" rx="6" stroke="currentColor" strokeWidth="2" fill="none" />
-            <path d="M24 24h16M24 32h16M24 40h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        </div>
-        <h1 className="font-serif text-2xl text-fg-primary mb-2">Vui lòng đăng nhập</h1>
-        <p className="text-fg-secondary text-sm">
-          Bạn cần đăng nhập để xem và đăng bài viết trên diễn đàn.
-        </p>
-      </main>
     )
   }
 
