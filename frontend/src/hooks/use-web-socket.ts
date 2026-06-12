@@ -9,6 +9,7 @@ const TYPING_TIMEOUT = 3000
 export function useWebSocket() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const addMessage = useChatStore((s) => s.addMessage)
+  const incrementUnread = useChatStore((s) => s.incrementUnread)
   const updateContactStatus = useChatStore((s) => s.updateContactStatus)
   const activeConversationId = useChatStore((s) => s.activeConversationId)
   const typingTimers = useRef<Map<number, ReturnType<typeof setTimeout>>>(
@@ -52,6 +53,10 @@ export function useWebSocket() {
       (payload) => {
         const msg = payload as Message
         addMessage(msg.conversation_id, msg)
+        // Increment unread if not viewing this conversation
+        if (msg.conversation_id !== activeConversationId) {
+          incrementUnread(1)
+        }
       },
     )
 
@@ -103,7 +108,7 @@ export function useWebSocket() {
       typingTimers.current.clear()
       socketManager.disconnect()
     }
-  }, [isAuthenticated, addMessage, updateContactStatus, activeConversationId])
+  }, [isAuthenticated, addMessage, incrementUnread, updateContactStatus, activeConversationId])
 
   return { onTyping }
 }

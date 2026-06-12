@@ -9,6 +9,7 @@ import type { LucideIcon } from "lucide-react";
 interface Tab {
   title: string;
   icon: LucideIcon;
+  badge?: number;
   type?: never;
 }
 
@@ -101,7 +102,14 @@ export function ExpandableTabs({
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
           >
-            <Icon size={20} />
+            <span className="relative">
+              <Icon size={20} />
+              {tab.badge != null && tab.badge > 0 && (
+                <span className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-crisis text-white text-[9px] font-bold flex items-center justify-center">
+                  {tab.badge > 9 ? '9+' : tab.badge}
+                </span>
+              )}
+            </span>
             <AnimatePresence initial={false}>
               {selected === index && (
                 <motion.span

@@ -11,6 +11,7 @@ interface ChatState {
   setConversations: (conversations: Conversation[]) => void
   setActiveConversation: (id: number | null) => void
   addMessage: (conversationId: number, message: Message) => void
+  incrementUnread: (amount: number) => void
   setMessages: (conversationId: number, messages: Message[]) => void
   markAsRead: (conversationId: number) => void
   setContacts: (contacts: Contact[]) => void
@@ -43,6 +44,9 @@ export const useChatStore = create<ChatState>((set) => ({
       }
       return { messages: updated }
     }),
+
+  incrementUnread: (amount) =>
+    set((state) => ({ unreadCount: state.unreadCount + amount })),
 
   setMessages: (conversationId, messages) =>
     set((state) => {

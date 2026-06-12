@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-dom'
 import { AuthModal } from '@/components/features/auth/auth-modal'
 import { useAuthStore } from '@/stores/auth-store'
+import { useChatStore } from '@/stores/chat-store'
 import { DiaryPage } from '@/components/features/diary/diary-page'
 import { TestPage } from '@/components/features/test/test-page'
 import { AppointmentsPage } from '@/components/features/appointments/appointments-page'
@@ -20,26 +21,28 @@ import { LibraryManage } from '@/components/features/library/library-manage'
 import { NotificationBell } from '@/components/features/notifications/notification-bell'
 import type { LucideIcon } from 'lucide-react'
 
-const navTabs: ({ title: string; icon: LucideIcon } | { type: 'separator' })[] = [
-  { title: 'Trang chủ', icon: Home },
-  { type: 'separator' as const },
-  { title: 'Nhật ký', icon: BookOpen },
-  { title: 'Kiểm tra', icon: ClipboardCheck },
-  { title: 'Thư viện', icon: Library },
-  { title: 'Cộng đồng', icon: Users },
-  { title: 'Lịch hẹn', icon: Calendar },
-  { title: 'Tin nhắn', icon: MessageCircle },
-]
-
 const tabRoutes = ['/', '/diary', '/test', '/library', '/community', '/appointments', '/chat']
 
 function NavBar() {
   const [authOpen, setAuthOpen] = useState(false)
   const [authTab, setAuthTab] = useState<'login' | 'register'>('login')
   const { isAuthenticated, user, logout } = useAuthStore()
+  const chatUnread = useChatStore((s) => s.unreadCount)
   const navigate = useNavigate()
   const role = user?.role ?? 'patient'
   const canManageTests = role === 'therapist' || role === 'admin'
+
+  const navTabs: ({ title: string; icon: LucideIcon; badge?: number } | { type: 'separator' })[] = [
+    { title: 'Trang chủ', icon: Home },
+    { type: 'separator' as const },
+    { title: 'Nhật ký', icon: BookOpen },
+    { title: 'Kiểm tra', icon: ClipboardCheck },
+    { title: 'Thư viện', icon: Library },
+    { title: 'Cộng đồng', icon: Users },
+    { title: 'Lịch hẹn', icon: Calendar },
+    { title: 'Tin nhắn', icon: MessageCircle, badge: chatUnread },
+  ]
+
   return (
     <>
       <header className="border-b border-border bg-canvas/80 backdrop-blur-md sticky top-0 z-50">
