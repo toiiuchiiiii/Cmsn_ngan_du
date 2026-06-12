@@ -71,7 +71,7 @@ export function useMessages(convId: number | null) {
 
   useEffect(() => {
     if (query.data && convId) {
-      setMessages(convId, query.data)
+      setMessages(convId, [...query.data].reverse())
     }
   }, [query.data, convId, setMessages])
 
