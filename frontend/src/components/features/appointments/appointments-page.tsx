@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import { AppointmentBook } from './appointment-book'
 import { AppointmentList } from './appointment-list'
+import { TherapistAppointments } from './therapist-appointments'
 import { useAuthStore } from '@/stores/auth-store'
 import { useCreateAppointment } from '@/hooks/use-appointments'
 import type { CreateAppointmentFormData } from '@/lib/appointment-schemas'
@@ -9,7 +10,8 @@ type Tab = 'book' | 'list'
 
 export function AppointmentsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('book')
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, user } = useAuthStore()
+  const isTherapist = user?.role === 'therapist' || user?.role === 'admin'
   const createMutation = useCreateAppointment()
 
   const handleCreate = useCallback(
@@ -30,11 +32,13 @@ export function AppointmentsPage() {
           </svg>
         </div>
         <h1 className="font-serif text-2xl text-fg-primary mb-2">Vui lòng đăng nhập</h1>
-        <p className="text-fg-secondary text-sm">
-          Bạn cần đăng nhập để sử dụng tính năng đặt lịch hẹn.
-        </p>
+        <p className="text-fg-secondary text-sm">Bạn cần đăng nhập để sử dụng tính năng này.</p>
       </main>
     )
+  }
+
+  if (isTherapist) {
+    return <TherapistAppointments />
   }
 
   return (
@@ -52,10 +56,8 @@ export function AppointmentsPage() {
           aria-selected={activeTab === 'book'}
           aria-controls="panel-book"
           onClick={() => setActiveTab('book')}
-          className={`flex-1 rounded-full py-2 px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-sage ${
-            activeTab === 'book'
-              ? 'bg-accent-sage text-white'
-              : 'text-fg-secondary hover:text-fg-primary'
+          className={`flex-1 rounded-full py-2 px-4 text-sm font-medium transition-colors ${
+            activeTab === 'book' ? 'bg-accent-sage text-white' : 'text-fg-secondary hover:text-fg-primary'
           }`}
         >
           Đặt lịch
@@ -66,10 +68,8 @@ export function AppointmentsPage() {
           aria-selected={activeTab === 'list'}
           aria-controls="panel-list"
           onClick={() => setActiveTab('list')}
-          className={`flex-1 rounded-full py-2 px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-sage ${
-            activeTab === 'list'
-              ? 'bg-accent-sage text-white'
-              : 'text-fg-secondary hover:text-fg-primary'
+          className={`flex-1 rounded-full py-2 px-4 text-sm font-medium transition-colors ${
+            activeTab === 'list' ? 'bg-accent-sage text-white' : 'text-fg-secondary hover:text-fg-primary'
           }`}
         >
           Lịch hẹn của tôi
@@ -80,12 +80,7 @@ export function AppointmentsPage() {
         <section id="panel-book" role="tabpanel" aria-labelledby="tab-dat-lich">
           <div className="rounded-xl bg-surface border border-border p-6">
             <h2 className="font-serif text-xl text-fg-primary mb-5">Đặt lịch hẹn mới</h2>
-            <AppointmentBook
-              onSubmit={handleCreate}
-              isLoading={createMutation.isPending}
-              isError={createMutation.isError}
-              error={createMutation.error}
-            />
+            <AppointmentBook onSubmit={handleCreate} isLoading={createMutation.isPending} isError={createMutation.isError} error={createMutation.error} />
           </div>
         </section>
       ) : (

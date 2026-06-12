@@ -17,6 +17,7 @@ import { RoleRequestPage } from '@/components/features/auth/role-request'
 import { LibraryPage } from '@/components/features/library/library-page'
 import { LibraryDetail } from '@/components/features/library/library-detail'
 import { LibraryManage } from '@/components/features/library/library-manage'
+import { NotificationBell } from '@/components/features/notifications/notification-bell'
 import type { LucideIcon } from 'lucide-react'
 
 const navTabs: ({ title: string; icon: LucideIcon } | { type: 'separator' })[] = [
@@ -92,6 +93,7 @@ function NavBar() {
                     Quản lý yêu cầu
                   </Link>
                 )}
+                <NotificationBell />
                 <span className="text-sm text-fg-secondary mr-2 hidden sm:inline">{user.name}</span>
                 <button
                   type="button"

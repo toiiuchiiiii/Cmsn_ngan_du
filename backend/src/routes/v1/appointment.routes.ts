@@ -16,6 +16,7 @@ const service = new AppointmentService(appointmentRepo);
 const controller = appointmentController(service);
 
 router.get('/', authenticate, controller.list);
+router.get('/therapist', authenticate, controller.therapistList);
 router.get('/:id', authenticate, controller.getById);
 router.post('/', authenticate, validate(createAppointmentSchema), controller.create);
 router.patch('/:id/status', authenticate, validate(updateAppointmentStatusSchema), controller.updateStatus);

@@ -13,6 +13,13 @@ export function appointmentController(appointmentService: AppointmentService) {
       res.json(paginated(entries, total, page, limit));
     }),
 
+    therapistList: asyncHandler(async (req: AuthRequest, res: Response) => {
+      const page = parseInt(req.query.page as string, 10) || 1;
+      const limit = parseInt(req.query.limit as string, 10) || 20;
+      const { entries, total } = await appointmentService.getTherapistEntries(req.userId!, page, limit);
+      res.json(paginated(entries, total, page, limit));
+    }),
+
     getById: asyncHandler(async (req: AuthRequest, res: Response) => {
       const id = parseInt(req.params.id as string, 10);
       const appointment = await appointmentService.getEntry(id, req.userId!);
@@ -28,12 +35,7 @@ export function appointmentController(appointmentService: AppointmentService) {
     updateStatus: asyncHandler(async (req: AuthRequest, res: Response) => {
       const id = parseInt(req.params.id as string, 10);
       const { status, cancelReason } = req.body;
-      const appointment = await appointmentService.updateStatus(
-        id,
-        req.userId!,
-        req.userRole!,
-        { status, cancelReason }
-      );
+      const appointment = await appointmentService.updateStatus(id, req.userId!, req.userRole!, { status, cancelReason });
       res.json(success(appointment));
     }),
 

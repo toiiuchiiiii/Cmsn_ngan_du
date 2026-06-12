@@ -6,7 +6,10 @@ import type { CreateAppointmentFormData } from '@/lib/appointment-schemas'
 export function useAppointments() {
   return useQuery({
     queryKey: ['appointments'],
-    queryFn: () => api.get('appointments').json<{ appointments: Appointment[] }>(),
+    queryFn: async () => {
+      const res = await api.get('appointments').json<{ success: boolean; data: Appointment[] }>()
+      return { appointments: res.data }
+    },
     staleTime: 0,
     gcTime: 0,
   })
@@ -16,7 +19,7 @@ export function useCreateAppointment() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (data: CreateAppointmentFormData) =>
-      api.post('appointments', { json: data }).json(),
+      api.post('appointments', { json: { date: data.date_time, notes: data.notes || undefined } }).json(),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['appointments'] }),
   })
 }

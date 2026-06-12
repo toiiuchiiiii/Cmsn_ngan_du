@@ -10,6 +10,7 @@ import testRoutes from './v1/test.routes.js';
 import testTemplateRoutes from './v1/test-template.routes.js';
 import adminRoutes from './v1/admin.routes.js';
 import libraryRoutes from './v1/library.routes.js';
+import notificationRoutes from './v1/notification.routes.js';
 
 const router = Router();
 
@@ -23,6 +24,7 @@ router.use('/api/v1/tests', testRoutes);
 router.use('/api/v1/test-templates', testTemplateRoutes);
 router.use('/api/v1/admin', adminRoutes);
 router.use('/api/v1/library', libraryRoutes);
+router.use('/api/v1/notifications', notificationRoutes);
 router.use(healthRoutes);
 
 export default router;
