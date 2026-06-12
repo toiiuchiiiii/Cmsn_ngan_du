@@ -12,10 +12,13 @@ export function EntryCard({ entry, onDelete }: EntryCardProps) {
   const [confirming, setConfirming] = useState(false)
   const mood = entry.mood as Mood
   const emoji = MOOD_EMOJIS[mood] || '📝'
-  const date = new Date(entry.created_at).toLocaleDateString('vi-VN', {
+  const created = new Date(entry.created_at)
+  const dateStr = created.toLocaleDateString('vi-VN', {
     year: 'numeric',
-    month: 'long',
+    month: 'numeric',
     day: 'numeric',
+  })
+  const timeStr = created.toLocaleTimeString('vi-VN', {
     hour: '2-digit',
     minute: '2-digit',
   })
@@ -42,9 +45,15 @@ export function EntryCard({ entry, onDelete }: EntryCardProps) {
         >
           <div className="flex items-center gap-2 mb-1.5">
             <span className="text-lg" aria-hidden="true">{emoji}</span>
-            <time className="text-xs text-fg-tertiary" dateTime={entry.created_at}>
-              {date}
-            </time>
+            <div className="flex items-baseline gap-1.5">
+              <time className="text-xs text-fg-tertiary font-medium" dateTime={entry.created_at}>
+                {dateStr}
+              </time>
+              <span className="text-[10px] text-fg-tertiary/60">•</span>
+              <time className="text-[10px] text-fg-tertiary/60" dateTime={entry.created_at}>
+                {timeStr}
+              </time>
+            </div>
           </div>
 
           <p className={`text-sm text-fg-secondary leading-relaxed ${expanded ? '' : 'line-clamp-2'}`}>

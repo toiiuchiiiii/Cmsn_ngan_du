@@ -16,7 +16,7 @@ export function useCreateDiaryEntry() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (data: CreateEntryFormData) =>
-      api.post('diary', { json: data }).json(),
+      api.post('diary', { json: data }).json<{ entry: DiaryEntry }>(),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['diary'] }),
   })
 }
