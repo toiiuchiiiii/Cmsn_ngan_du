@@ -6,6 +6,7 @@ import { TestIntro } from './test-intro'
 import { TestQuiz } from './test-quiz'
 import { TestResultView } from './test-result'
 import { TestHistory } from './test-history'
+import { TestManagement } from './test-management'
 import type { TestType, SeverityLevel } from '@/types'
 
 type View = 'select' | 'intro' | 'quiz' | 'result' | 'history'
@@ -21,9 +22,12 @@ function findSeverity(test: TestType, score: number): SeverityLevel {
 }
 
 export function TestPage() {
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, user } = useAuthStore()
   const saveMutation = useSaveTest()
+  const role = user?.role ?? 'patient'
+  const canManage = role === 'therapist' || role === 'admin'
 
+  const [pageTab, setPageTab] = useState<'test' | 'manage'>('test')
   const [view, setView] = useState<View>('select')
   const [selectedTest, setSelectedTest] = useState<TestType | null>(null)
   const [step, setStep] = useState(0)
@@ -207,7 +211,25 @@ export function TestPage() {
 
   return (
     <div className="max-w-xl mx-auto px-4 py-12">
-      {renderView()}
+      {canManage && (
+        <div className="flex gap-2 mb-8 justify-center">
+          <button
+            type="button"
+            onClick={() => setPageTab('test')}
+            className={`rounded-full px-5 py-2 text-sm font-medium transition-colors ${pageTab === 'test' ? 'bg-accent-sage text-white' : 'border border-border text-fg-secondary hover:bg-surface-hover'}`}
+          >
+            Bài kiểm tra
+          </button>
+          <button
+            type="button"
+            onClick={() => setPageTab('manage')}
+            className={`rounded-full px-5 py-2 text-sm font-medium transition-colors ${pageTab === 'manage' ? 'bg-accent-sage text-white' : 'border border-border text-fg-secondary hover:bg-surface-hover'}`}
+          >
+            Quản lý
+          </button>
+        </div>
+      )}
+      {pageTab === 'manage' && canManage ? <TestManagement /> : renderView()}
     </div>
   )
 }

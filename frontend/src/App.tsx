@@ -4,7 +4,6 @@ import { AuthModal } from '@/components/features/auth/auth-modal'
 import { useAuthStore } from '@/stores/auth-store'
 import { DiaryPage } from '@/components/features/diary/diary-page'
 import { TestPage } from '@/components/features/test/test-page'
-import { TestManagement } from '@/components/features/test/test-management'
 import { AppointmentsPage } from '@/components/features/appointments/appointments-page'
 import { CommunityPage } from '@/components/features/community/community-page'
 import { PostDetail } from '@/components/features/community/post-detail'
@@ -60,22 +59,13 @@ function NavBar() {
             {isAuthenticated && user ? (
               <>
                 {canManageTests && (
-                  <>
-                    <Link
-                      to="/test/manage"
-                      className="hidden sm:inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs text-accent-sage font-medium hover:bg-accent-sage-surface transition-colors no-underline"
-                    >
-                      <PlusCircle size={14} />
-                      Quản lý test
-                    </Link>
-                    <Link
-                      to="/library/manage"
+                  <Link
+                    to="/library/manage"
                       className="hidden sm:inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs text-accent-sage font-medium hover:bg-accent-sage-surface transition-colors no-underline"
                     >
                       <PlusCircle size={14} />
                       Đăng bài viết
                     </Link>
-                  </>
                 )}
                 {role === 'patient' && (
                   <Link
@@ -216,7 +206,6 @@ function AppLayout() {
           <Route path="/" element={<HomePage />} />
           <Route path="/diary" element={<DiaryPage />} />
           <Route path="/test" element={<TestPage />} />
-          <Route path="/test/manage" element={<TestManagement />} />
           <Route path="/community" element={<CommunityPage />} />
           <Route path="/community/:id" element={<PostDetail />} />
           <Route path="/appointments" element={<AppointmentsPage />} />
